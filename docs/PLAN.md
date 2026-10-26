@@ -5,8 +5,8 @@ Each milestone is small, leaves the site deployable, and adds a build-log entry.
 ## 0. Repo and deploy skeleton
 - Git housekeeping: rename `master` to `main`, gitignore `.DS_Store`, move private resume notes to gitignored `content/resume.notes.md`. (done)
 - Rename `docs/website-BRIEF.md` to `docs/BRIEF.md` and update `CLAUDE.md` to match. (done)
-- Scaffold minimal Astro, add the Actions deploy. (done) Create the GitHub repo `my-site` and push.
-- Done when a hello page is live at `charan2396.github.io/my-site`.
+- Scaffold minimal Astro, add the Actions deploy. (done) Create the GitHub repo `my-site` and push. (done)
+- Done when a hello page is live at `charan2396.github.io/my-site`. **M0 complete 2026-10-26.**
 
 ## 1. Blueprint shell
 - Color tokens, fonts, layout, header and footer.
