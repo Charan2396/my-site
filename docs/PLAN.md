@@ -8,7 +8,7 @@ Each milestone is small, leaves the site deployable, and adds a build-log entry.
 - Scaffold minimal Astro, add the Actions deploy. (done) Create the GitHub repo `my-site` and push. (done)
 - Done when a hello page is live at `charan2396.github.io/my-site`. **M0 complete 2026-10-26.**
 
-## 1. Blueprint shell
+## 1. Blueprint shell (done 2026-10-26)
 - Color tokens, fonts, layout, header and footer.
 - Light and dark themes.
 - Base-path-safe links.

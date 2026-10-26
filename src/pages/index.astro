@@ -1,17 +1,35 @@
 ---
-const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+import Base from '../layouts/Base.astro';
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
-		<link rel="icon" href={`${base}favicon.ico`} />
-		<meta name="viewport" content="width=device-width" />
-		<title>Sricharan Anand</title>
-	</head>
-	<body>
-		<h1>Sricharan Anand</h1>
-		<p>Senior Data Platform Engineer. Site under construction.</p>
-	</body>
-</html>
+<Base>
+	<p class="label mono">fig. 0 · under construction</p>
+	<h1>Sricharan Anand</h1>
+	<p class="lede">
+		Senior Data Platform Engineer. I keep mainframe change data flowing through IBM MQ and Java services into Oracle and
+		on to Google Cloud Pub/Sub, with a focus on reliability, data correctness and automation.
+	</p>
+	<p class="mono note">Next: an interactive diagram of that pipeline, with a story at each stage.</p>
+</Base>
+
+<style>
+	.label {
+		margin: 0;
+		color: var(--line);
+		font-size: 0.8125rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	h1 {
+		margin-block: 0.5rem 1rem;
+		font-size: clamp(2rem, 6vw, 3.25rem);
+	}
+	.lede {
+		max-width: var(--measure);
+		font-size: 1.1875rem;
+	}
+	.note {
+		color: var(--muted);
+		font-size: 0.875rem;
+	}
+</style>

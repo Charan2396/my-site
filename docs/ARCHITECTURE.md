@@ -41,7 +41,7 @@ Source (mainframe) → Queue (MQ) → Process (Java) → Store (Oracle) → Cons
 - **Mobile:** the diagram stacks vertically, using the same SVG with a different `viewBox`.
 
 ## Theme
-- Light-first blueprint palette: background `#f7f8fa`, ink `#1b2a41`, line `#2f6fde`, a faint grid.
+- Light-first blueprint palette: background `#f7f8fa`, ink `#1b2a41`, line `#2864d2` (darkened from `#2f6fde` to pass AA on the background), a faint grid.
 - Dark variant via `prefers-color-scheme`.
 - All colors are tokens on `:root`. Contrast must meet WCAG AA.
 

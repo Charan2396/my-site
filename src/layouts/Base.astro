@@ -1,0 +1,120 @@
+---
+import { Font } from 'astro:assets';
+import '../styles/global.css';
+import { url } from '../lib/url';
+
+interface Props {
+	title?: string;
+	description?: string;
+}
+
+const name = 'Sricharan Anand';
+const {
+	title,
+	description = 'Senior Data Platform Engineer: real-time data replication, enterprise messaging and data reconciliation.',
+} = Astro.props;
+
+// Add each entry when its page ships (stories M3, build log M7, projects/resume M2 and M8), so the live site never has dead links.
+const nav: { href: string; label: string }[] = [];
+const current = Astro.url.pathname.replace(/\/$/, '');
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title ? `${title} · ${name}` : name}</title>
+		<meta name="description" content={description} />
+		<link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
+		<link rel="icon" href={url('favicon.ico')} />
+		<Font cssVariable="--font-sans" preload />
+		<Font cssVariable="--font-mono" />
+	</head>
+	<body>
+		<a class="skip-link" href="#main">Skip to content</a>
+		<header class="site-header">
+			<div class="wrap bar">
+				<a class="brand mono" href={url()}>{name}</a>
+				{nav.length > 0 && (
+					<nav aria-label="Main">
+						<ul>
+							{nav.map(({ href, label }) => (
+								<li>
+									<a href={url(href)} aria-current={current === url(href).replace(/\/$/, '') ? 'page' : undefined}>
+										{label}
+									</a>
+								</li>
+							))}
+						</ul>
+					</nav>
+				)}
+			</div>
+		</header>
+
+		<main id="main" class="wrap">
+			<slot />
+		</main>
+
+		<footer class="site-footer">
+			<div class="wrap bar mono">
+				<span>© {new Date().getFullYear()} {name}</span>
+				<ul>
+					<li><a href="mailto:sricharan23@gmail.com">Email</a></li>
+					<li><a href="https://linkedin.com/in/charansri">LinkedIn</a></li>
+					<li><a href="https://github.com/Charan2396">GitHub</a></li>
+				</ul>
+			</div>
+		</footer>
+	</body>
+</html>
+
+<style>
+	.site-header,
+	.site-footer {
+		border-block: 1px solid var(--rule);
+		background: var(--surface);
+	}
+	.site-header {
+		border-top: 0;
+	}
+	.site-footer {
+		margin-top: auto;
+		border-bottom: 0;
+		font-size: 0.875rem;
+		color: var(--muted);
+	}
+	.bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem 1.5rem;
+		padding-block: 0.875rem;
+	}
+	.bar ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 1.25rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.brand {
+		color: var(--ink);
+		font-weight: 600;
+		text-decoration: none;
+		letter-spacing: 0.02em;
+	}
+	nav a {
+		color: var(--ink);
+		text-decoration: none;
+	}
+	nav a:hover,
+	nav a[aria-current='page'] {
+		color: var(--line);
+		text-decoration: underline;
+	}
+	main {
+		padding-block: 3rem;
+	}
+</style>
