@@ -36,8 +36,8 @@ A schema validates the frontmatter, so a typo fails the build.
 `src/components/Pipeline.astro` renders the five stages from `src/lib/stages.ts` as an ordered list of boxes with CSS connector arrows:
 Source (mainframe) → Queue (MQ) → Process (Java) → Store (Oracle) → Consume (Pub/Sub and downstream consumers).
 It is HTML, not SVG: a list reflows from horizontal to vertical on narrow screens with one media query, and screen readers read it as an ordered list.
-- **Without JS:** a stage with a published story is a real `<a>` to it. A stage without one renders as plain text ("Story coming soon"), never a dead link.
-- **With JS (M5), the record view:** one invented order line is shown as it looks at the selected stage (mainframe record, MQ message, JSON, Oracle row, Pub/Sub event). Click, Next/Prev or the arrow keys change stage; the stage's story link sits beside it. Without JS, all five versions render in sequence.
+- **Without JS:** each stage box shows a "Read the story" `<a>` when the stage has a published story, otherwise plain text ("Story coming soon"), never a dead link. Below it (fig. 2), all five versions of one invented order line render as an ordered list: mainframe fixed-width record, MQ message (MQMD + payload), splitter JSON, Oracle MERGE + row, Pub/Sub message. Samples and a per-stage `format` label live in `stages.ts` (`sample`, `corruptSource`); `[[ ]]` in a sample marks the changed field (qty), rendered as `<mark>`.
+- **With JS, the record view:** an inline script unhides a transparent `<button aria-pressed>` over each stage box (the story link sits above it and stays clickable) plus Prev/Next. Click, Prev/Next or Left/Right arrows (while focus is inside the component, not inside a scrolling `<pre>`) show one version at a time via `hidden`; an `aria-live="polite"` region announces the stage. The Source version has a `<details>` with the corrupt record linking to the one-bad-message story.
 - **Reduced motion:** with `prefers-reduced-motion`, the record jumps between stages instead of animating.
 - **Mobile:** below 56rem the stages stack vertically and the arrows point down.
 

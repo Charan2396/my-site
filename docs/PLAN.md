@@ -34,7 +34,7 @@ Remaining candidates by stage. Every metric comes from `content/resume.md`; ⚠ 
 - **Consume:** a real-time Pub/Sub data broker ⚠
 - **Cross-cutting:** shut down a log-ingestion runaway of over one billion events per day ⚠
 
-## 5. The record view (hero)
+## 5. The record view (hero) (base done 2026-10-26)
 Moved up from "Follow a record": this is what makes the site more than the resume.
 - One **invented** order line (fake keys, generic field names, no internal names), shown as it looks at each stage:
   fixed-width mainframe change record → MQ message (header + payload) → JSON from the broker → Oracle row → Pub/Sub event.

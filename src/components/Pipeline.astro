@@ -1,5 +1,5 @@
 ---
-import { stages } from '../lib/stages';
+import { stages, corruptSource } from '../lib/stages';
 import { url } from '../lib/url';
 
 interface Props {
@@ -7,38 +7,146 @@ interface Props {
 	storyByStage: Partial<Record<string, string>>;
 }
 const { storyByStage } = Astro.props;
+const storyHref = (key: string) => (storyByStage[key] ? url(`stories/${storyByStage[key]}/`) : undefined);
+// Samples mark the changed field with [[ ]]; odd split parts are the marked ones.
+const parts = (text: string) => text.split(/\[\[|\]\]/);
 ---
 
-<figure class="pipeline">
-	<figcaption class="mono">fig. 1 · one record's path through the platform</figcaption>
-	<ol>
-		{
-			stages.map((s, i) => {
-				const slug = storyByStage[s.key];
-				const Tag = slug ? 'a' : 'div';
-				return (
-					<li>
-						<Tag
-							class="stage"
-							href={slug ? url(`stories/${slug}/`) : undefined}
-							aria-label={slug ? `Stage ${i + 1}, ${s.label}: ${s.system}, ${s.detail}. Read the story.` : undefined}
-						>
-							<span class="num mono" aria-hidden="true">{i + 1}</span>
-							<span class="label mono">{s.label}</span>
-							<span class="system">{s.system}</span>
-							<span class="detail">{s.detail}</span>
-							<span class="cta mono">{slug ? 'Read the story →' : 'Story coming soon'}</span>
-						</Tag>
-					</li>
-				);
-			})
-		}
-	</ol>
-</figure>
+<div class="record-view" data-record-view>
+	<figure class="pipeline">
+		<figcaption class="mono">fig. 1 · one record's path through the platform</figcaption>
+		<ol>
+			{
+				stages.map((s, i) => {
+					const href = storyHref(s.key);
+					return (
+						<li>
+							<button class="pick" type="button" data-pick={i} aria-pressed={i === 0 ? 'true' : 'false'} hidden>
+								<span class="sr-only">
+									Show the record at stage {i + 1}, {s.label}
+								</span>
+							</button>
+							<div class={href ? 'stage' : 'stage soon'}>
+								<span class="num mono" aria-hidden="true">{i + 1}</span>
+								<span class="label mono">{s.label}</span>
+								<span class="system">{s.system}</span>
+								<span class="detail">{s.detail}</span>
+								{href ? (
+									<a class="cta mono" href={href}>
+										Read the story<span class="sr-only">: {s.label} stage</span> →
+									</a>
+								) : (
+									<span class="cta mono">Story coming soon</span>
+								)}
+							</div>
+						</li>
+					);
+				})
+			}
+		</ol>
+	</figure>
+
+	<figure class="records">
+		<figcaption class="mono">
+			fig. 2 · the same order line at each stage · <mark>highlight</mark> = the changed field (qty 2 → 3)
+		</figcaption>
+		<div class="controls" data-controls hidden>
+			<button type="button" data-step="-1">← Prev</button>
+			<span class="mono" data-count aria-hidden="true">1 / {stages.length}</span>
+			<button type="button" data-step="1">Next →</button>
+		</div>
+		<p class="sr-only" aria-live="polite" data-live></p>
+		<ol class="versions">
+			{
+				stages.map((s, i) => {
+					const href = storyHref(s.key);
+					return (
+						<li data-version>
+							<header>
+								<span class="num mono" aria-hidden="true">{i + 1}</span>
+								<h3>
+									{s.label} <span>· {s.system}</span>
+								</h3>
+								<span class="format mono">{s.format}</span>
+							</header>
+							<pre tabindex="0" aria-label={`Sample record at the ${s.label} stage`}>{parts(s.sample).map((p, j) => (j % 2 ? <mark>{p}</mark> : p))}</pre>
+							{s.key === 'source' && (
+								<details>
+									<summary class="mono">Show the corrupt version</summary>
+									<pre tabindex="0" aria-label="The same record as it once arrived corrupt">{corruptSource}</pre>
+									<p>
+										Same bytes, uneven line breaks inside one message. The splitter could not parse it and started
+										rejecting everything behind it.{' '}
+										{href && <a href={href}>Read the one-bad-message story</a>}
+									</p>
+								</details>
+							)}
+							<p class="story mono">
+								{href ? (
+									<a href={href}>
+										Read the story<span class="sr-only">: {s.label} stage</span> →
+									</a>
+								) : (
+									'Story coming soon'
+								)}
+							</p>
+						</li>
+					);
+				})
+			}
+		</ol>
+	</figure>
+</div>
+
+<script>
+	for (const root of document.querySelectorAll<HTMLElement>('[data-record-view]')) {
+		const versions = [...root.querySelectorAll<HTMLElement>('[data-version]')];
+		const picks = [...root.querySelectorAll<HTMLButtonElement>('[data-pick]')];
+		const live = root.querySelector<HTMLElement>('[data-live]')!;
+		const count = root.querySelector<HTMLElement>('[data-count]')!;
+		const panel = root.querySelector<HTMLElement>('.records')!;
+		let current = 0;
+
+		const show = (i: number, announce = true) => {
+			current = (i + versions.length) % versions.length;
+			versions.forEach((v, j) => (v.hidden = j !== current));
+			picks.forEach((b, j) => b.setAttribute('aria-pressed', String(j === current)));
+			count.textContent = `${current + 1} / ${versions.length}`;
+			if (announce) live.textContent = `Stage ${current + 1} of ${versions.length}: ${versions[current].querySelector('h3')!.textContent}`;
+		};
+
+		root.classList.add('is-stepper');
+		for (const el of [...picks, root.querySelector<HTMLElement>('[data-controls]')!]) el.hidden = false;
+		picks.forEach((b, j) =>
+			b.addEventListener('click', () => {
+				show(j);
+				// on narrow screens the panel sits below the stacked stages
+				const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+				panel.scrollIntoView({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+			}),
+		);
+		for (const b of root.querySelectorAll<HTMLButtonElement>('[data-step]'))
+			b.addEventListener('click', () => show(current + Number(b.dataset.step)));
+		root.addEventListener('keydown', (e) => {
+			// leave arrows alone inside scrollable record boxes and the disclosure
+			if (e.altKey || e.ctrlKey || e.metaKey || (e.target as HTMLElement).closest('pre, summary')) return;
+			if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+			e.preventDefault();
+			show(current + (e.key === 'ArrowRight' ? 1 : -1));
+			if (picks.includes(document.activeElement as HTMLButtonElement)) picks[current].focus();
+		});
+		show(0, false);
+	}
+</script>
 
 <style>
-	.pipeline {
+	.record-view {
+		display: grid;
+		gap: 2.5rem;
+	}
+	figure {
 		margin: 0;
+		min-width: 0;
 	}
 	figcaption {
 		margin-bottom: 1rem;
@@ -47,7 +155,23 @@ const { storyByStage } = Astro.props;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 	}
-	ol {
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+	mark {
+		padding: 0 0.15em;
+		background: color-mix(in srgb, var(--line) 16%, transparent);
+		color: inherit;
+		box-shadow: inset 0 -2px 0 var(--line);
+	}
+
+	/* fig. 1: the stage boxes */
+	.pipeline ol {
 		display: grid;
 		grid-template-columns: repeat(5, 1fr);
 		gap: 2rem;
@@ -55,12 +179,12 @@ const { storyByStage } = Astro.props;
 		padding: 0;
 		list-style: none;
 	}
-	li {
+	.pipeline li {
 		position: relative;
 		display: flex;
 	}
 	/* connector: horizontal arrow to the next stage */
-	li:not(:last-child)::after {
+	.pipeline li:not(:last-child)::after {
 		content: '';
 		position: absolute;
 		top: 2.25rem;
@@ -69,7 +193,7 @@ const { storyByStage } = Astro.props;
 		height: 1px;
 		background: var(--line);
 	}
-	li:not(:last-child)::before {
+	.pipeline li:not(:last-child)::before {
 		content: '';
 		position: absolute;
 		top: calc(2.25rem - 4px);
@@ -88,27 +212,52 @@ const { storyByStage } = Astro.props;
 		border-radius: var(--radius);
 		background: var(--surface);
 		color: var(--ink);
-		text-decoration: none;
+		transition:
+			box-shadow 0.15s,
+			background-color 0.15s;
 	}
-	div.stage {
+	.stage.soon {
 		border-style: dashed;
 		border-color: var(--rule);
 	}
-	a.stage:hover {
+	/* with JS, a transparent button covers each box; the story link stays clickable above it */
+	.pick {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		padding: 0;
+		border: 0;
+		border-radius: var(--radius);
+		background: none;
+		cursor: pointer;
+	}
+	.pick[hidden] {
+		display: none;
+	}
+	.pick:hover + .stage {
 		box-shadow: inset 0 0 0 1px var(--line);
 	}
-	a.stage:hover .cta {
-		text-decoration: underline;
+	.pick[aria-pressed='true'] + .stage {
+		border: 1px solid var(--line);
+		background: color-mix(in srgb, var(--line) 9%, var(--surface));
+		box-shadow:
+			inset 0 0 0 1px var(--line),
+			0 4px 0 -2px var(--line);
 	}
 	.num {
 		display: grid;
 		place-items: center;
+		flex: none;
 		width: 1.75rem;
 		height: 1.75rem;
 		border: 1px solid var(--line);
 		border-radius: 50%;
 		color: var(--line);
 		font-size: 0.8125rem;
+	}
+	.pick[aria-pressed='true'] + .stage .num {
+		background: var(--line);
+		color: var(--surface);
 	}
 	.label {
 		margin-top: 0.5rem;
@@ -127,32 +276,154 @@ const { storyByStage } = Astro.props;
 		line-height: 1.4;
 	}
 	.cta {
+		position: relative;
+		z-index: 3;
+		align-self: flex-start;
 		margin-top: auto;
 		padding-top: 0.75rem;
 		font-size: 0.75rem;
 		color: var(--line);
 	}
-	div.stage .cta {
+	a.cta {
+		text-decoration: none;
+	}
+	a.cta:hover {
+		text-decoration: underline;
+	}
+	span.cta {
 		color: var(--muted);
+	}
+
+	/* fig. 2: the record at each stage */
+	.records {
+		position: relative;
+	}
+	.controls {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 0.75rem;
+	}
+	.controls[hidden] {
+		display: none;
+	}
+	.controls button {
+		padding: 0.375rem 0.75rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+		color: var(--line);
+		font: 0.8125rem var(--font-mono);
+		cursor: pointer;
+	}
+	.controls button:hover {
+		background: color-mix(in srgb, var(--line) 9%, var(--surface));
+	}
+	.controls span {
+		color: var(--muted);
+		font-size: 0.8125rem;
+	}
+	.versions {
+		display: grid;
+		gap: 1.5rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.versions li {
+		min-width: 0;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+	}
+	.is-stepper .versions li:not([hidden]) {
+		animation: arrive 0.2s ease-out;
+	}
+	@keyframes arrive {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+	}
+	.versions header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.25rem 0.75rem;
+		padding: 0.75rem 1rem;
+		border-bottom: 1px dashed var(--rule);
+	}
+	.versions h3 {
+		margin: 0;
+		font-size: 1rem;
+	}
+	.versions h3 span {
+		color: var(--muted);
+		font-weight: 400;
+	}
+	.format {
+		margin-left: auto;
+		padding: 0.125rem 0.5rem;
+		border: 1px solid var(--rule);
+		border-radius: var(--radius);
+		color: var(--muted);
+		font-size: 0.75rem;
+	}
+	pre {
+		margin: 0;
+		padding: 1rem;
+		overflow-x: auto;
+		font-family: var(--font-mono);
+		font-size: 0.8125rem;
+		line-height: 1.55;
+	}
+	details {
+		margin: 0 1rem;
+		padding: 0.5rem 0;
+		border-top: 1px dashed var(--rule);
+	}
+	summary {
+		color: var(--line);
+		font-size: 0.8125rem;
+		cursor: pointer;
+	}
+	details pre {
+		margin-top: 0.5rem;
+		border: 1px dashed var(--rule);
+		border-left: 3px solid var(--line);
+	}
+	details p {
+		margin: 0.5rem 0 0;
+		font-size: 0.9375rem;
+	}
+	.story {
+		margin: 0;
+		padding: 0.625rem 1rem;
+		border-top: 1px dashed var(--rule);
+		color: var(--muted);
+		font-size: 0.8125rem;
 	}
 
 	/* narrow screens: stack vertically, connectors point down */
 	@media (max-width: 56rem) {
-		ol {
+		.pipeline ol {
 			grid-template-columns: 1fr;
 			gap: 1.5rem;
 		}
-		li:not(:last-child)::after {
+		.pipeline li:not(:last-child)::after {
 			top: 100%;
 			left: 1.875rem;
 			width: 1px;
 			height: 1.5rem;
 		}
-		li:not(:last-child)::before {
+		.pipeline li:not(:last-child)::before {
 			top: calc(100% + 1.5rem - 8px);
 			left: calc(1.875rem - 4px);
 			border: 4.5px solid transparent;
 			border-top: 7px solid var(--line);
+		}
+		.format {
+			margin-left: 0;
 		}
 	}
 </style>
