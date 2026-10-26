@@ -1,0 +1,78 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getStories } from '../../lib/stories';
+import { stages } from '../../lib/stages';
+import { url } from '../../lib/url';
+
+export async function getStaticPaths() {
+	return (await getStories()).map((story) => ({ params: { slug: story.id }, props: { story } }));
+}
+
+const { story } = Astro.props;
+const { Content } = await render(story);
+const stageIndex = stages.findIndex((s) => s.key === story.data.stage);
+const stage = stages[stageIndex];
+---
+
+<Base title={story.data.title} description={story.data.summary}>
+	<article>
+		<p class="eyebrow mono">fig. {stageIndex + 1} · {stage.label} · {stage.system}</p>
+		<h1>{story.data.title}</h1>
+		<p class="lede">{story.data.summary}</p>
+
+		{
+			story.data.metrics.length > 0 && (
+				<ul class="metrics mono" aria-label="Results">
+					{story.data.metrics.map((m) => (
+						<li>{m}</li>
+					))}
+				</ul>
+			)
+		}
+
+		<div class="prose">
+			<Content />
+		</div>
+
+		<p class="back mono"><a href={url()}>← Back to the pipeline</a></p>
+	</article>
+</Base>
+
+<style>
+	.eyebrow {
+		margin: 0;
+		color: var(--line);
+		font-size: 0.8125rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	h1 {
+		max-width: var(--measure);
+		margin-block: 0.5rem 1rem;
+		font-size: clamp(1.75rem, 5vw, 2.75rem);
+	}
+	.lede {
+		max-width: var(--measure);
+		font-size: 1.1875rem;
+	}
+	.metrics {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin: 2rem 0;
+		padding: 0;
+		list-style: none;
+	}
+	.metrics li {
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+		font-size: 0.875rem;
+	}
+	.back {
+		margin-top: 3rem;
+		font-size: 0.875rem;
+	}
+</style>

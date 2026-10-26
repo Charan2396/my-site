@@ -1,19 +1,46 @@
 ---
 import Base from '../layouts/Base.astro';
+import Pipeline from '../components/Pipeline.astro';
+import { getStories } from '../lib/stories';
+import { stages } from '../lib/stages';
+import { url } from '../lib/url';
+
+const stories = await getStories();
+const storyByStage: Record<string, string> = {};
+for (const s of stories) storyByStage[s.data.stage] ??= s.id;
+const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 ---
 
 <Base>
-	<p class="label mono">fig. 0 · under construction</p>
-	<h1>Sricharan Anand</h1>
+	<p class="eyebrow mono">Senior Data Platform Engineer</p>
+	<h1>The pipeline is the portfolio.</h1>
 	<p class="lede">
-		Senior Data Platform Engineer. I keep mainframe change data flowing through IBM MQ and Java services into Oracle and
-		on to Google Cloud Pub/Sub, with a focus on reliability, data correctness and automation.
+		I keep mainframe change data flowing through IBM MQ and Java services into Oracle and on to Google Cloud Pub/Sub, with
+		a focus on reliability, data correctness and automation. Each stage below opens a story about real work I did there.
 	</p>
-	<p class="mono note">Next: an interactive diagram of that pipeline, with a story at each stage.</p>
+
+	<Pipeline storyByStage={storyByStage} />
+
+	{
+		stories.length > 0 && (
+			<section aria-labelledby="stories-heading">
+				<h2 id="stories-heading">Stories</h2>
+				<ul class="stories">
+					{stories.map((s) => (
+						<li>
+							<a href={url(`stories/${s.id}/`)}>{s.data.title}</a>
+							<span class="mono stage-tag">{stageLabel(s.data.stage)}</span>
+							<p>{s.data.summary}</p>
+						</li>
+					))}
+				</ul>
+			</section>
+		)
+	}
 </Base>
 
 <style>
-	.label {
+	.eyebrow {
 		margin: 0;
 		color: var(--line);
 		font-size: 0.8125rem;
@@ -26,10 +53,31 @@ import Base from '../layouts/Base.astro';
 	}
 	.lede {
 		max-width: var(--measure);
+		margin-bottom: 3rem;
 		font-size: 1.1875rem;
 	}
-	.note {
+	section {
+		margin-top: 4rem;
+	}
+	.stories {
+		display: grid;
+		gap: 1.5rem;
+		max-width: var(--measure);
+		padding: 0;
+		list-style: none;
+	}
+	.stories a {
+		font-weight: 600;
+		font-size: 1.125rem;
+	}
+	.stage-tag {
+		margin-left: 0.75rem;
 		color: var(--muted);
-		font-size: 0.875rem;
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.stories p {
+		margin: 0.25rem 0 0;
 	}
 </style>

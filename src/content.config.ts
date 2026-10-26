@@ -1,13 +1,14 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { stageKeys } from './lib/stages';
 
 // Markdown lives in /content at the repo root so stories can be edited without touching src/.
 const stories = defineCollection({
 	loader: glob({ pattern: '*.md', base: './content/stories' }),
 	schema: z.object({
 		title: z.string(),
-		stage: z.enum(['source', 'queue', 'process', 'store', 'consume']),
+		stage: z.enum(stageKeys),
 		order: z.number().int(),
 		summary: z.string(),
 		// Each metric must be quoted from content/resume.md (checked by review).

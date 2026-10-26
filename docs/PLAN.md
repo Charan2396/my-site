@@ -19,8 +19,8 @@ Each milestone is small, leaves the site deployable, and adds a build-log entry.
 - The post-build check plus a local `.denylist`.
 - Done when a planted test term fails the build.
 
-## 3. Static diagram
-- The five-stage SVG, with each stage linking to its story.
+## 3. Static diagram (done 2026-10-26)
+- The five-stage diagram (HTML list, not SVG), with each stage linking to its story once one exists.
 - Vertical layout on mobile.
 - The story page template.
 

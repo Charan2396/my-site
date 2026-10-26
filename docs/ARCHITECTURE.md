@@ -33,12 +33,13 @@ A schema validates the frontmatter, so a typo fails the build.
 - The resume PDF is a file supplied in `public/`.
 
 ## Pipeline diagram (hero)
-One Astro component holds an inline SVG with five stages:
+`src/components/Pipeline.astro` renders the five stages from `src/lib/stages.ts` as an ordered list of boxes with CSS connector arrows:
 Source (mainframe) → Queue (MQ) → Process (Java) → Store (Oracle) → Consume (Pub/Sub and downstream consumers).
-- **Without JS:** each stage is a real `<a>` link to its story, so the diagram works with no script, stays accessible and gets indexed.
-- **With JS, "Follow a record":** Next/Prev buttons and the arrow keys move one record through the stages. A detail panel shows the current stage's story summary.
+It is HTML, not SVG: a list reflows from horizontal to vertical on narrow screens with one media query, and screen readers read it as an ordered list.
+- **Without JS:** a stage with a published story is a real `<a>` to it. A stage without one renders as plain text ("Story coming soon"), never a dead link.
+- **With JS (M6), "Follow a record":** Next/Prev buttons and the arrow keys move one record through the stages. A detail panel shows the current stage's story summary.
 - **Reduced motion:** with `prefers-reduced-motion`, the record jumps between stages instead of animating.
-- **Mobile:** the diagram stacks vertically, using the same SVG with a different `viewBox`.
+- **Mobile:** below 56rem the stages stack vertically and the arrows point down.
 
 ## Theme
 - Light-first blueprint palette: background `#f7f8fa`, ink `#1b2a41`, line `#2864d2` (darkened from `#2f6fde` to pass AA on the background), a faint grid.

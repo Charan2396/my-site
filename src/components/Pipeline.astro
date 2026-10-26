@@ -1,0 +1,158 @@
+---
+import { stages } from '../lib/stages';
+import { url } from '../lib/url';
+
+interface Props {
+	/** First published story per stage; stages without one render as plain text, never a dead link. */
+	storyByStage: Partial<Record<string, string>>;
+}
+const { storyByStage } = Astro.props;
+---
+
+<figure class="pipeline">
+	<figcaption class="mono">fig. 1 · one record's path through the platform</figcaption>
+	<ol>
+		{
+			stages.map((s, i) => {
+				const slug = storyByStage[s.key];
+				const Tag = slug ? 'a' : 'div';
+				return (
+					<li>
+						<Tag
+							class="stage"
+							href={slug ? url(`stories/${slug}/`) : undefined}
+							aria-label={slug ? `Stage ${i + 1}, ${s.label}: ${s.system}, ${s.detail}. Read the story.` : undefined}
+						>
+							<span class="num mono" aria-hidden="true">{i + 1}</span>
+							<span class="label mono">{s.label}</span>
+							<span class="system">{s.system}</span>
+							<span class="detail">{s.detail}</span>
+							<span class="cta mono">{slug ? 'Read the story →' : 'Story coming soon'}</span>
+						</Tag>
+					</li>
+				);
+			})
+		}
+	</ol>
+</figure>
+
+<style>
+	.pipeline {
+		margin: 0;
+	}
+	figcaption {
+		margin-bottom: 1rem;
+		color: var(--muted);
+		font-size: 0.8125rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	ol {
+		display: grid;
+		grid-template-columns: repeat(5, 1fr);
+		gap: 2rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	li {
+		position: relative;
+		display: flex;
+	}
+	/* connector: horizontal arrow to the next stage */
+	li:not(:last-child)::after {
+		content: '';
+		position: absolute;
+		top: 2.25rem;
+		left: 100%;
+		width: 2rem;
+		height: 1px;
+		background: var(--line);
+	}
+	li:not(:last-child)::before {
+		content: '';
+		position: absolute;
+		top: calc(2.25rem - 4px);
+		left: calc(100% + 2rem - 8px);
+		border: 4.5px solid transparent;
+		border-left: 7px solid var(--line);
+		z-index: 1;
+	}
+	.stage {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		width: 100%;
+		padding: 1rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+		color: var(--ink);
+		text-decoration: none;
+	}
+	div.stage {
+		border-style: dashed;
+		border-color: var(--rule);
+	}
+	a.stage:hover {
+		box-shadow: inset 0 0 0 1px var(--line);
+	}
+	a.stage:hover .cta {
+		text-decoration: underline;
+	}
+	.num {
+		display: grid;
+		place-items: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		border: 1px solid var(--line);
+		border-radius: 50%;
+		color: var(--line);
+		font-size: 0.8125rem;
+	}
+	.label {
+		margin-top: 0.5rem;
+		color: var(--line);
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.system {
+		font-weight: 600;
+		font-size: 1.0625rem;
+	}
+	.detail {
+		color: var(--muted);
+		font-size: 0.875rem;
+		line-height: 1.4;
+	}
+	.cta {
+		margin-top: auto;
+		padding-top: 0.75rem;
+		font-size: 0.75rem;
+		color: var(--line);
+	}
+	div.stage .cta {
+		color: var(--muted);
+	}
+
+	/* narrow screens: stack vertically, connectors point down */
+	@media (max-width: 56rem) {
+		ol {
+			grid-template-columns: 1fr;
+			gap: 1.5rem;
+		}
+		li:not(:last-child)::after {
+			top: 100%;
+			left: 1.875rem;
+			width: 1px;
+			height: 1.5rem;
+		}
+		li:not(:last-child)::before {
+			top: calc(100% + 1.5rem - 8px);
+			left: calc(1.875rem - 4px);
+			border: 4.5px solid transparent;
+			border-top: 7px solid var(--line);
+		}
+	}
+</style>
