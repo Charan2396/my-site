@@ -37,7 +37,7 @@ A schema validates the frontmatter, so a typo fails the build.
 Source (mainframe) → Queue (MQ) → Process (Java) → Store (Oracle) → Consume (Pub/Sub and downstream consumers).
 It is HTML, not SVG: a list reflows from horizontal to vertical on narrow screens with one media query, and screen readers read it as an ordered list.
 - **Without JS:** a stage with a published story is a real `<a>` to it. A stage without one renders as plain text ("Story coming soon"), never a dead link.
-- **With JS (M6), "Follow a record":** Next/Prev buttons and the arrow keys move one record through the stages. A detail panel shows the current stage's story summary.
+- **With JS (M5), the record view:** one invented order line is shown as it looks at the selected stage (mainframe record, MQ message, JSON, Oracle row, Pub/Sub event). Click, Next/Prev or the arrow keys change stage; the stage's story link sits beside it. Without JS, all five versions render in sequence.
 - **Reduced motion:** with `prefers-reduced-motion`, the record jumps between stages instead of animating.
 - **Mobile:** below 56rem the stages stack vertically and the arrows point down.
 

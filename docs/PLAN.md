@@ -24,23 +24,27 @@ Each milestone is small, leaves the site deployable, and adds a build-log entry.
 - Vertical layout on mobile.
 - The story page template.
 
-## 4. First story, end to end
-We pick the story together and write it from resume facts only. You confirm its metric before it ships.
-Candidates by stage. Every metric comes from `content/resume.md`; ⚠ means it is marked VERIFY in `content/resume.notes.md`.
+## 4. First story, end to end (done 2026-10-26)
+We picked the story together and wrote it from resume facts plus your answers. You approved it before it shipped.
+Shipped: `content/stories/one-bad-message.md` (Source stage).
+Remaining candidates by stage. Every metric comes from `content/resume.md`; ⚠ means it is marked VERIFY in `content/resume.notes.md`.
 - **Process:** splitter batch cut from 3–4 min to ~30 s ⚠
 - **Store:** ~16,900 missing order lines recovered across 23 company codes ⚠
 - **Queue:** store-and-forward MQ, over 90% less planned-downtime exposure ⚠ (needs manager OK)
-- **Source:** isolated a corrupt message that caused tens of thousands of rejections
 - **Consume:** a real-time Pub/Sub data broker ⚠
 - **Cross-cutting:** shut down a log-ingestion runaway of over one billion events per day ⚠
 
-## 5. Remaining stories
-- 3–5 more stories, each written once its VERIFY flags are cleared.
+## 5. The record view (hero)
+Moved up from "Follow a record": this is what makes the site more than the resume.
+- One **invented** order line (fake keys, generic field names, no internal names), shown as it looks at each stage:
+  fixed-width mainframe change record → MQ message (header + payload) → JSON from the broker → Oracle row → Pub/Sub event.
+- Selecting a stage (click, Next/Prev buttons, arrow keys) shows that stage's version of the record beside the diagram, plus its story link if one exists.
+- Without JS, all five versions render as a readable sequence. With reduced motion, switching is instant.
+- Sample data lives next to the stage list in `src/lib/stages.ts`, so there is one source.
+- Optional tie-in: the Source stage can show the *corrupt* record, uneven line breaks included, linking to the one-bad-message story.
 
-## 6. "Follow a record" interaction
-- The JS enhancement on the diagram.
-- Keyboard support and a reduced-motion mode.
-- The detail panel.
+## 6. Remaining stories
+- 3–5 more stories, each written once its VERIFY flags are cleared.
 
 ## 7. Build log page
 - Backfill entries from the setup session: brief → CLAUDE.md → GitHub dig → this plan.
