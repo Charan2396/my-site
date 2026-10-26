@@ -46,9 +46,8 @@ Source (mainframe) → Queue (MQ) → Process (Java) → Store (Oracle) → Cons
 - All colors are tokens on `:root`. Contrast must meet WCAG AA.
 
 ## Confidentiality and metrics guard (build time)
-Private VERIFY notes live in `content/resume.notes.md`, which is gitignored. HTML comments in Markdown would still reach the page source, so as a backstop:
-- A small remark plugin strips HTML comments from rendered Markdown.
-- A post-build check fails the build if `dist/` contains `<!--`, `VERIFY`, or any term from `.denylist`.
+Private VERIFY notes live in `content/resume.notes.md`, which is gitignored. Astro's Markdown passes HTML comments into the page source, so as a backstop:
+- `scripts/check-dist.mjs` runs after every build (locally and in CI) and fails the build if `dist/` contains `<!--`, `VERIFY`, or any term from `.denylist`.
 - `.denylist` is a local list of internal names. It is gitignored and never committed, because committing it would publish the names.
 - Story `metrics[]` must be quoted from `content/resume.md`. This is enforced by review, not code.
 

@@ -15,6 +15,7 @@ const {
 } = Astro.props;
 
 // Add each entry when its page ships (stories M3, build log M7, projects/resume M2 and M8), so the live site never has dead links.
+// Resume is hidden until its VERIFY figures are cleared: rename src/pages/_resume.astro to resume.astro and add { href: 'resume/', label: 'Resume' }.
 const nav: { href: string; label: string }[] = [];
 const current = Astro.url.pathname.replace(/\/$/, '');
 ---

@@ -1,0 +1,3 @@
+# Copy to .denylist (gitignored) and list internal names, one per line, case-insensitive.
+# Never commit .denylist: it would publish the very names it protects.
+# example-internal-hostname

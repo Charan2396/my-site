@@ -13,9 +13,9 @@ Each milestone is small, leaves the site deployable, and adds a build-log entry.
 - Light and dark themes.
 - Base-path-safe links.
 
-## 2. Content plumbing and guard
+## 2. Content plumbing and guard (done 2026-10-26)
 - Content collections and schemas.
-- `/resume` page, with HTML comments stripped.
+- `/resume` page. (The build check fails on any HTML comment, so none can ship.) Hidden as `src/pages/_resume.astro` until its VERIFY figures are cleared; publish by renaming it and adding the nav link.
 - The post-build check plus a local `.denylist`.
 - Done when a planted test term fails the build.
 
