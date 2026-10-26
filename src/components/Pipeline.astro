@@ -1,5 +1,6 @@
 ---
 import { stages, corruptSource } from '../lib/stages';
+import { incidentSteps } from '../lib/incident';
 import { url } from '../lib/url';
 
 interface Props {
@@ -10,6 +11,8 @@ const { storyByStage } = Astro.props;
 const storyHref = (key: string) => (storyByStage[key] ? url(`stories/${storyByStage[key]}/`) : undefined);
 // Samples mark the changed field with [[ ]]; odd split parts are the marked ones.
 const parts = (text: string) => text.split(/\[\[|\]\]/);
+const corruptLines = corruptSource.split('\n');
+const sourceStory = storyHref('source');
 ---
 
 <div class="record-view" data-record-view>
@@ -26,17 +29,20 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 									Show the record at stage {i + 1}, {s.label}
 								</span>
 							</button>
-							<div class={href ? 'stage' : 'stage soon'}>
+							<div class="stage" data-stage>
 								<span class="num mono" aria-hidden="true">{i + 1}</span>
 								<span class="label mono">{s.label}</span>
 								<span class="system">{s.system}</span>
 								<span class="detail">{s.detail}</span>
-								{href ? (
+								{s.key === 'process' && (
+									<span class="flag mono" aria-hidden="true">
+										✕ rejecting
+									</span>
+								)}
+								{href && (
 									<a class="cta mono" href={href}>
 										Read the story<span class="sr-only">: {s.label} stage</span> →
 									</a>
-								) : (
-									<span class="cta mono">Story coming soon</span>
 								)}
 							</div>
 						</li>
@@ -44,6 +50,7 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 				})
 			}
 		</ol>
+		<span class="token mono" aria-hidden="true" data-token hidden><i></i>4471/2</span>
 	</figure>
 
 	<figure class="records">
@@ -70,29 +77,66 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 								<span class="format mono">{s.format}</span>
 							</header>
 							<pre tabindex="0" aria-label={`Sample record at the ${s.label} stage`}>{parts(s.sample).map((p, j) => (j % 2 ? <mark>{p}</mark> : p))}</pre>
-							{s.key === 'source' && (
-								<details>
-									<summary class="mono">Show the corrupt version</summary>
-									<pre tabindex="0" aria-label="The same record as it once arrived corrupt">{corruptSource}</pre>
-									<p>
-										Same bytes, uneven line breaks inside one message. The splitter could not parse it and started
-										rejecting everything behind it.{' '}
-										{href && <a href={href}>Read the one-bad-message story</a>}
-									</p>
-								</details>
-							)}
-							<p class="story mono">
-								{href ? (
+							{href && (
+								<p class="story mono">
 									<a href={href}>
 										Read the story<span class="sr-only">: {s.label} stage</span> →
 									</a>
-								) : (
-									'Story coming soon'
-								)}
-							</p>
+								</p>
+							)}
 						</li>
 					);
 				})
+			}
+		</ol>
+	</figure>
+
+	<figure class="incident" data-incident>
+		<figcaption class="mono">fig. 3 · incident replay: one bad message</figcaption>
+		<button class="start" type="button" data-replay hidden>Replay the incident: inject the corrupt message</button>
+		<div class="controls" data-icontrols hidden>
+			<button type="button" data-istep="-1">← Prev</button>
+			<span class="mono" data-icount aria-hidden="true">1 / {incidentSteps.length}</span>
+			<button type="button" data-istep="1">Next →</button>
+			<button type="button" data-play hidden>Play</button>
+			<button type="button" data-exit>Exit replay</button>
+		</div>
+		<ol class="steps" data-steps>
+			{
+				incidentSteps.map((st, i) => (
+					<li data-step-item data-at={st.at} data-lit={(st.lit ?? [st.at]).join(' ')} data-error={st.error ? '' : undefined}>
+						<header>
+							<span class="num mono" aria-hidden="true">{i + 1}</span>
+							<h3>{st.title}</h3>
+						</header>
+						<p>{st.caption}</p>
+						{st.show === 'corrupt' && (
+							<pre tabindex="0" aria-label="The corrupt Source record, with its uneven line breaks marked">{corruptLines.map((l, j) => (j < corruptLines.length - 1 ? [l, <mark>⏎</mark>, '\n'] : l))}</pre>
+						)}
+						{st.backlog && (
+							<div class={`backlog is-${st.backlog}`}>
+								<span class="bar" aria-hidden="true"><span /></span>
+								<span class="mono">
+									{st.backlog === 'drain' ? 'backlog drained: clean copies landed in Oracle' : 'tens of thousands of messages rejected'}
+								</span>
+							</div>
+						)}
+						{st.show === 'alert' && <pre class="alert">ALERT  missing rows: order_line not landing in Oracle</pre>}
+						{st.show === 'keys' && (
+							<pre>{`affected keys (order_id/line_no)
+4471/2
+4471/3
+5502/1
+…
+→ fed back to the mainframe for regeneration`}</pre>
+						)}
+						{st.show === 'story' && sourceStory && (
+							<p class="mono">
+								<a href={sourceStory}>Read the full story →</a>
+							</p>
+						)}
+					</li>
+				))
 			}
 		</ol>
 	</figure>
@@ -102,40 +146,124 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 	for (const root of document.querySelectorAll<HTMLElement>('[data-record-view]')) {
 		const versions = [...root.querySelectorAll<HTMLElement>('[data-version]')];
 		const picks = [...root.querySelectorAll<HTMLButtonElement>('[data-pick]')];
+		const boxes = [...root.querySelectorAll<HTMLElement>('[data-stage]')];
 		const live = root.querySelector<HTMLElement>('[data-live]')!;
 		const count = root.querySelector<HTMLElement>('[data-count]')!;
 		const panel = root.querySelector<HTMLElement>('.records')!;
+		const token = root.querySelector<HTMLElement>('[data-token]')!;
+		const steps = [...root.querySelectorAll<HTMLElement>('[data-step-item]')];
+		const stepList = root.querySelector<HTMLElement>('[data-steps]')!;
+		const startBtn = root.querySelector<HTMLButtonElement>('[data-replay]')!;
+		const iControls = root.querySelector<HTMLElement>('[data-icontrols]')!;
+		const iCount = root.querySelector<HTMLElement>('[data-icount]')!;
+		const playBtn = root.querySelector<HTMLButtonElement>('[data-play]')!;
+		const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 		let current = 0;
+		let step = -1; // -1 = not replaying
+		let at = 0;
+		let timer = 0;
+
+		// move the record token onto stage box `i` (top-right corner, riding the box border)
+		const place = () => {
+			const li = boxes[at].parentElement!;
+			const x = li.offsetLeft + li.offsetWidth - token.offsetWidth - 12;
+			const y = li.offsetTop - token.offsetHeight / 2;
+			token.style.transform = `translate(${x}px, ${y}px)`;
+		};
+		const paint = (i: number, lit = [i], error = false) => {
+			at = i;
+			boxes.forEach((b, j) => {
+				b.classList.toggle('is-on', lit.includes(j));
+				b.classList.toggle('is-error', error && j === 2);
+			});
+			place();
+		};
 
 		const show = (i: number, announce = true) => {
 			current = (i + versions.length) % versions.length;
 			versions.forEach((v, j) => (v.hidden = j !== current));
 			picks.forEach((b, j) => b.setAttribute('aria-pressed', String(j === current)));
 			count.textContent = `${current + 1} / ${versions.length}`;
+			if (step < 0) paint(current);
 			if (announce) live.textContent = `Stage ${current + 1} of ${versions.length}: ${versions[current].querySelector('h3')!.textContent}`;
 		};
 
+		const stopPlay = () => {
+			clearInterval(timer);
+			timer = 0;
+			playBtn.textContent = 'Play';
+		};
+		const go = (n: number) => {
+			step = Math.max(0, Math.min(steps.length - 1, n));
+			steps.forEach((s, j) => (s.hidden = j !== step));
+			const s = steps[step].dataset;
+			paint(Number(s.at), s.lit ? s.lit.split(' ').map(Number) : [], 'error' in s);
+			iCount.textContent = `${step + 1} / ${steps.length}`;
+			live.textContent = `Incident step ${step + 1} of ${steps.length}: ${steps[step].querySelector('h3')!.textContent}`;
+			if (step === steps.length - 1) stopPlay();
+		};
+		const exitReplay = (focus = true) => {
+			if (step < 0) return;
+			stopPlay();
+			step = -1;
+			root.classList.remove('in-replay');
+			stepList.hidden = iControls.hidden = true;
+			startBtn.hidden = false;
+			paint(current);
+			live.textContent = `Replay closed. Stage ${current + 1} of ${versions.length}.`;
+			if (focus) startBtn.focus();
+		};
+
 		root.classList.add('is-stepper');
-		for (const el of [...picks, root.querySelector<HTMLElement>('[data-controls]')!]) el.hidden = false;
+		for (const el of [...picks, root.querySelector<HTMLElement>('[data-controls]')!, startBtn, token]) el.hidden = false;
+		stepList.hidden = true;
+		const syncPlay = () => (playBtn.hidden = reduced.matches);
+		syncPlay();
+		reduced.addEventListener('change', () => (stopPlay(), syncPlay()));
+
 		picks.forEach((b, j) =>
 			b.addEventListener('click', () => {
+				exitReplay(false);
 				show(j);
 				// on narrow screens the panel sits below the stacked stages
-				const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-				panel.scrollIntoView({ block: 'nearest', behavior: smooth ? 'smooth' : 'auto' });
+				panel.scrollIntoView({ block: 'nearest', behavior: reduced.matches ? 'auto' : 'smooth' });
 			}),
 		);
 		for (const b of root.querySelectorAll<HTMLButtonElement>('[data-step]'))
-			b.addEventListener('click', () => show(current + Number(b.dataset.step)));
+			b.addEventListener('click', () => (exitReplay(false), show(current + Number(b.dataset.step))));
+		for (const b of root.querySelectorAll<HTMLButtonElement>('[data-istep]'))
+			b.addEventListener('click', () => (stopPlay(), go(step + Number(b.dataset.istep))));
+		startBtn.addEventListener('click', () => {
+			root.classList.add('in-replay');
+			startBtn.hidden = true;
+			stepList.hidden = iControls.hidden = false;
+			go(0);
+			iControls.querySelector<HTMLButtonElement>('[data-istep="1"]')!.focus();
+		});
+		root.querySelector('[data-exit]')!.addEventListener('click', () => exitReplay());
+		playBtn.addEventListener('click', () => {
+			if (timer) return stopPlay();
+			if (reduced.matches) return;
+			if (step === steps.length - 1) go(0);
+			playBtn.textContent = 'Pause';
+			timer = window.setInterval(() => go(step + 1), 2000);
+		});
 		root.addEventListener('keydown', (e) => {
-			// leave arrows alone inside scrollable record boxes and the disclosure
-			if (e.altKey || e.ctrlKey || e.metaKey || (e.target as HTMLElement).closest('pre, summary')) return;
+			// leave arrows alone inside scrollable record boxes
+			if (e.altKey || e.ctrlKey || e.metaKey || (e.target as HTMLElement).closest('pre')) return;
+			if (e.key === 'Escape' && step >= 0) return exitReplay();
 			if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
 			e.preventDefault();
-			show(current + (e.key === 'ArrowRight' ? 1 : -1));
+			const d = e.key === 'ArrowRight' ? 1 : -1;
+			if (step >= 0) return stopPlay(), go(step + d);
+			show(current + d);
 			if (picks.includes(document.activeElement as HTMLButtonElement)) picks[current].focus();
 		});
+		addEventListener('resize', place);
+		document.fonts?.ready.then(place);
 		show(0, false);
+		// first placement without a slide; later moves animate (CSS transition, zeroed under reduced motion)
+		requestAnimationFrame(() => token.classList.add('can-move'));
 	}
 </script>
 
@@ -216,11 +344,7 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 			box-shadow 0.15s,
 			background-color 0.15s;
 	}
-	.stage.soon {
-		border-style: dashed;
-		border-color: var(--rule);
-	}
-	/* with JS, a transparent button covers each box; the story link stays clickable above it */
+		/* with JS, a transparent button covers each box; the story link stays clickable above it */
 	.pick {
 		position: absolute;
 		inset: 0;
@@ -237,7 +361,7 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 	.pick:hover + .stage {
 		box-shadow: inset 0 0 0 1px var(--line);
 	}
-	.pick[aria-pressed='true'] + .stage {
+	.stage.is-on {
 		border: 1px solid var(--line);
 		background: color-mix(in srgb, var(--line) 9%, var(--surface));
 		box-shadow:
@@ -255,7 +379,7 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 		color: var(--line);
 		font-size: 0.8125rem;
 	}
-	.pick[aria-pressed='true'] + .stage .num {
+	.stage.is-on .num {
 		background: var(--line);
 		color: var(--surface);
 	}
@@ -290,8 +414,74 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 	a.cta:hover {
 		text-decoration: underline;
 	}
-	span.cta {
-		color: var(--muted);
+	/* Process box while the splitter is rejecting (replay steps 3-5); text, not only colour */
+	.flag {
+		display: none;
+		align-self: flex-start;
+		margin-top: 0.5rem;
+		padding: 0 0.375rem;
+		border: 1px solid var(--error);
+		border-radius: var(--radius);
+		color: var(--error);
+		font-size: 0.75rem;
+	}
+	.stage.is-error {
+		border-color: var(--error);
+		background: var(--error-bg);
+		box-shadow:
+			inset 0 0 0 1px var(--error),
+			0 4px 0 -2px var(--error);
+	}
+	.stage.is-error .flag {
+		display: block;
+	}
+	.stage.is-error .num {
+		border-color: var(--error);
+		background: var(--error);
+		color: var(--surface);
+	}
+
+	/* the record token: rides the top border of the current stage box */
+	.pipeline {
+		position: relative;
+	}
+	.pipeline ol {
+		padding-top: 0.75rem;
+	}
+	.token {
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 4;
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.125rem 0.375rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+		color: var(--line);
+		font-size: 0.6875rem;
+		line-height: 1.4;
+		pointer-events: none;
+	}
+	.token[hidden] {
+		display: none;
+	}
+	.token i {
+		width: 0.5rem;
+		height: 0.5rem;
+		background: var(--line);
+	}
+	.token.can-move {
+		transition: transform 0.6s ease-in-out;
+	}
+	.in-replay .token {
+		border-color: var(--error);
+		color: var(--error);
+	}
+	.in-replay .token i {
+		background: var(--error);
 	}
 
 	/* fig. 2: the record at each stage */
@@ -304,10 +494,15 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 		gap: 0.75rem;
 		margin-bottom: 0.75rem;
 	}
-	.controls[hidden] {
+	.controls[hidden],
+	.start[hidden] {
 		display: none;
 	}
-	.controls button {
+	.controls {
+		flex-wrap: wrap;
+	}
+	.controls button,
+	.start {
 		padding: 0.375rem 0.75rem;
 		border: 1px solid var(--line);
 		border-radius: var(--radius);
@@ -316,7 +511,8 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 		font: 0.8125rem var(--font-mono);
 		cursor: pointer;
 	}
-	.controls button:hover {
+	.controls button:hover,
+	.start:hover {
 		background: color-mix(in srgb, var(--line) 9%, var(--surface));
 	}
 	.controls span {
@@ -377,24 +573,104 @@ const parts = (text: string) => text.split(/\[\[|\]\]/);
 		font-size: 0.8125rem;
 		line-height: 1.55;
 	}
-	details {
-		margin: 0 1rem;
-		padding: 0.5rem 0;
-		border-top: 1px dashed var(--rule);
+	/* fig. 3: incident replay; without JS all steps show as a timeline */
+	.start {
+		padding: 0.5rem 0.875rem;
+		border-color: var(--error);
+		color: var(--error);
 	}
-	summary {
-		color: var(--line);
-		font-size: 0.8125rem;
-		cursor: pointer;
+	.steps {
+		display: grid;
+		gap: 1rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
 	}
-	details pre {
-		margin-top: 0.5rem;
+	.steps[hidden],
+	.steps li[hidden] {
+		display: none;
+	}
+	.steps li {
+		min-width: 0;
+		padding: 0.75rem 1rem 1rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+	}
+	.is-stepper .steps li:not([hidden]) {
+		animation: arrive 0.2s ease-out;
+	}
+	.steps header {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+	.steps h3 {
+		margin: 0;
+		font-size: 1rem;
+	}
+	.steps p {
+		margin: 0.5rem 0 0;
+		max-width: var(--measure);
+	}
+	.steps pre {
+		margin-top: 0.75rem;
 		border: 1px dashed var(--rule);
 		border-left: 3px solid var(--line);
 	}
-	details p {
-		margin: 0.5rem 0 0;
-		font-size: 0.9375rem;
+	.steps pre.alert {
+		border-left-color: var(--error);
+		background: var(--error-bg);
+		color: var(--error);
+		white-space: pre-wrap;
+	}
+	.backlog {
+		display: grid;
+		gap: 0.25rem;
+		margin-top: 0.75rem;
+		font-size: 0.8125rem;
+		color: var(--muted);
+	}
+	.backlog .bar {
+		display: block;
+		max-width: 24rem;
+		height: 0.75rem;
+		border: 1px solid var(--error);
+	}
+	.backlog .bar span {
+		display: block;
+		width: 100%;
+		height: 100%;
+		background: var(--error);
+	}
+	.backlog.is-drain .bar {
+		border-style: dashed;
+		border-color: var(--rule);
+	}
+	.backlog.is-drain .bar span {
+		width: 0;
+	}
+	.is-stepper .backlog.is-grow .bar span {
+		animation: grow 1.6s ease-out;
+	}
+	.is-stepper .backlog.is-drain .bar span {
+		animation: drain 1.6s ease-in;
+	}
+	@keyframes grow {
+		from {
+			width: 6%;
+		}
+		to {
+			width: 100%;
+		}
+	}
+	@keyframes drain {
+		from {
+			width: 100%;
+		}
+		to {
+			width: 0;
+		}
 	}
 	.story {
 		margin: 0;

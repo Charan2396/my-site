@@ -7,6 +7,9 @@
 	--line: #2864d2;
 	--grid: rgb(40 100 210 / 0.07);
 	--rule: #cfd8e6;
+	/* error state (incident replay); AA: 6.57 on surface, 6.19 on bg, 5.65 on error-bg */
+	--error: #b42318;
+	--error-bg: #f8ebea;
 
 	--space: 1rem;
 	--measure: 68ch;
@@ -22,6 +25,9 @@
 		--line: #7aa7ff;
 		--grid: rgb(122 167 255 / 0.08);
 		--rule: #2a3a55;
+		/* AA: 7.14 on surface, 7.84 on bg, 6.18 on error-bg */
+		--error: #ff8a7a;
+		--error-bg: #292a39;
 	}
 }
 
