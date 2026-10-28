@@ -26,3 +26,4 @@ pnpm-debug.log*
 # private resume notes and internal-name denylist
 content/resume.notes.md
 .denylist
+tests/e2e/.out/

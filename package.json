@@ -9,9 +9,13 @@
     "dev": "astro dev",
     "build": "astro build && node scripts/check-dist.mjs",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test:e2e": "node tests/run.mjs"
   },
   "dependencies": {
     "astro": "^7.4.2"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
   }
 }

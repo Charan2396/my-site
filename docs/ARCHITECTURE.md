@@ -3,7 +3,7 @@
 Decisions so far: Astro, GitHub Pages (project repo), custom domain later, visual direction "Engineering blueprint".
 
 ## Stack
-- Astro, static output. Plain CSS with custom properties. One small vanilla-JS script, for the diagram only.
+- Astro, static output. Plain CSS with custom properties. Small vanilla-JS scripts for the diagram and explainers.
 - No React or UI framework, and no CSS framework.
 - Fonts: self-hosted IBM Plex Sans and IBM Plex Mono, two weights each.
 
@@ -42,6 +42,15 @@ It is HTML, not SVG: a list reflows from horizontal to vertical on narrow screen
 - **Incident replay (fig. 3):** step data lives in `src/lib/incident.ts` (title, caption, token stage, lit boxes, Process error state, backlog bar state, extra panel). Without JS the seven steps render as a static ordered timeline. With JS a "Replay the incident" button shows one step at a time: Prev/Next, Left/Right arrows, Escape or "Exit replay" to leave, optional Play (2s per step, hidden under reduced motion). The live region announces "Incident step N of 7: ...". The Process box gets an error state (`--error`/`--error-bg` tokens, plus a "rejecting" text flag) on steps 3-5. The backlog is a bar with no axis, labelled "tens of thousands" (the story's own phrase). Clicking a stage or fig. 2's Prev/Next exits the replay.
 - **Reduced motion:** with `prefers-reduced-motion`, the record and the token jump between stages instead of animating (global rule zeroes transitions/animations).
 - **Mobile:** below 56rem the stages stack vertically and the arrows point down.
+
+## Page transitions and motion
+- `<ClientRouter />` in `Base.astro` navigates without full reloads. Stage boxes and story headers share `transition:name="stage-<key>"`, so a box morphs into its story header.
+- Every interactive script registers through `onPage(init)` from `src/lib/stepper.ts`: `init(signal)` runs on each `astro:page-load`, and the `AbortSignal` aborts on `astro:before-swap`, so listeners (window `resize` included) never stack up.
+- Motion layer on fig. 1: a one-time CSS draw-in of boxes and connectors, `aria-hidden` packets on the connectors (paused during the replay and when the tab is hidden), a sticky stage strip during the replay below 56rem, and a CSS lift plus corner marks on hover/focus. Reduced motion turns all of it off. No JS animation library.
+
+## Tests
+- `tests/e2e/*.mjs`: Playwright suites (record view, incident replay, pages, stories, working-with-me, motion, explainers) at 390/820/1280, light/dark, no-JS and reduced motion.
+- `npm run test:e2e` (`tests/run.mjs`) serves the existing `dist/` with `astro preview --port 4329` and runs every suite; build first. `BASE_URL` points it at another host (e.g. the live site), `CHROME_PATH` picks the browser (default: system Chrome on macOS, else Playwright's chromium). Screenshots go to `tests/e2e/.out/` (gitignored).
 
 ## Theme
 - Light-first blueprint palette: background `#f7f8fa`, ink `#1b2a41`, line `#2864d2` (darkened from `#2f6fde` to pass AA on the background), a faint grid.

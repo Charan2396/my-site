@@ -33,4 +33,5 @@ All of it is University at Buffalo coursework from 2018–19. Label it that way 
 
 Astro and GitHub Pages; see `docs/ARCHITECTURE.md` and `docs/PLAN.md`. Node >= 22.23.4.
 - Install: `npm install` · Dev: `npm run dev` · Build: `npm run build` · Preview: `npm run preview`
+- E2E: `npm run build && npm run test:e2e` (Playwright, `tests/e2e`; `BASE_URL=... npm run test:e2e` to test another host)
 - Deploy: push to `main`, then GitHub Actions publishes to `charan2396.github.io/my-site`
