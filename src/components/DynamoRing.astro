@@ -1,0 +1,288 @@
+---
+import StepControls from './StepControls.astro';
+import { ring, short, KEY, keyHash, keyAfter, ORIGIN, describe, type Scenario, type Msg } from '../lib/dynamo';
+
+interface Props {
+	scenario: Scenario;
+	fig: number;
+}
+const { scenario, fig } = Astro.props;
+
+// ring geometry (SVG user units): nodes evenly spaced clockwise from the top, in hash order
+const W = 420, H = 330, CX = 210, CY = 172, R = 108, NR = 27;
+const at = (i: number, r = R) => {
+	const a = ((-90 + i * (360 / ring.length)) * Math.PI) / 180;
+	return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a), cos: Math.cos(a) };
+};
+const anchor = (cos: number) => (Math.abs(cos) < 0.3 ? 'middle' : cos > 0 ? 'start' : 'end');
+const nodes = ring.map((n, i) => ({ ...n, p: at(i), label: at(i, R + NR + 14) }));
+const keyPos = at(keyAfter + 0.5);
+const keyLabel = at(keyAfter + 0.5, R + 16);
+const posOf = (port: string) => nodes.find((n) => n.port === port)!.p;
+const f = (n: number) => n.toFixed(1);
+
+// one message: a chord between two nodes, shifted 4 units to its right so a send and its ack sit side by side
+const line = (m: Msg) => {
+	const a = posOf(m.from), b = posOf(m.to);
+	const len = Math.hypot(b.x - a.x, b.y - a.y);
+	const ux = (b.x - a.x) / len, uy = (b.y - a.y) / len;
+	const nx = -uy * 4, ny = ux * 4;
+	const s = { x: a.x + ux * (NR + 3) + nx, y: a.y + uy * (NR + 3) + ny };
+	const e = { x: b.x - ux * (NR + 3) + nx, y: b.y - uy * (NR + 3) + ny };
+	const head = `${f(e.x)},${f(e.y)} ${f(e.x - ux * 8 - uy * 4)},${f(e.y - uy * 8 + ux * 4)} ${f(e.x - ux * 8 + uy * 4)},${f(e.y - uy * 8 - ux * 4)}`;
+	return { s, e, head };
+};
+const state = (st: Scenario['steps'][number], port: string) =>
+	st.down?.includes(port) ? 'down' : port === ORIGIN ? (st.buffer ? 'buffer' : `${scenario.op}()`) : st.copies?.includes(port) ? 'copy' : '';
+---
+
+<figure class="dynamo" data-stepper={scenario.name} id={`scenario-${scenario.id}`}>
+	<figcaption class="mono">fig. {fig} · {scenario.name.toLowerCase()} · {scenario.title}</figcaption>
+	<StepControls total={scenario.steps.length} />
+	<ol class="steps">
+		{
+			scenario.steps.map((st, i) => (
+				<li data-step-item>
+					<header>
+						<span class="num mono" aria-hidden="true">{i + 1}</span>
+						<h3>{st.title}</h3>
+					</header>
+					<div class="body">
+						<svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={describe(st)}>
+							<circle class="ring" cx={CX} cy={CY} r={R} />
+							<g class="key">
+								<rect x={f(keyPos.x - 5)} y={f(keyPos.y - 5)} width="10" height="10" transform={`rotate(45 ${f(keyPos.x)} ${f(keyPos.y)})`} />
+								<text x={f(keyLabel.x)} y={f(keyLabel.y + 4)} text-anchor={anchor(keyLabel.cos)}>
+									{KEY} {short(keyHash)}
+								</text>
+							</g>
+							{nodes.map((n) => (
+								<g
+									class:list={[
+										'node',
+										{
+											'is-lit': st.lit?.includes(n.port),
+											'is-error': st.down?.includes(n.port),
+											'has-copy': st.copies?.includes(n.port),
+											'is-origin': n.port === ORIGIN,
+										},
+									]}
+									data-port={n.port}
+								>
+									<circle cx={f(n.p.x)} cy={f(n.p.y)} r={NR} />
+									<text class="port" x={f(n.p.x)} y={f(n.p.y + (state(st, n.port) ? -1 : 4))} text-anchor="middle">
+										{n.port}
+									</text>
+									{state(st, n.port) && (
+										<text class="state" x={f(n.p.x)} y={f(n.p.y + 11)} text-anchor="middle">
+											{state(st, n.port)}
+										</text>
+									)}
+									<text class="hash" x={f(n.label.x)} y={f(n.label.y + 4)} text-anchor={anchor(n.label.cos)}>
+										{short(n.hash)}
+									</text>
+								</g>
+							))}
+							{(st.msgs ?? []).map((m, j) => {
+								const l = line(m);
+								return (
+									<g class={`msg is-${m.kind}`} style={`--d: ${m.kind === 'alive' ? 0 : j}`}>
+										<line x1={f(l.s.x)} y1={f(l.s.y)} x2={f(l.e.x)} y2={f(l.e.y)} />
+										<polygon points={l.head} />
+									</g>
+								);
+							})}
+						</svg>
+						<p class="caption">{st.caption}</p>
+					</div>
+				</li>
+			))
+		}
+	</ol>
+	<p class="legend mono">
+		Ring order = SHA-1 order; the label by each node is its hash prefix. Solid arrow = request, dashed = ack,{' '}
+		<span class="err">red dashed = no answer</span>.
+	</p>
+	{scenario.note && <p class="limit"><strong>Honest limit:</strong> {scenario.note}</p>}
+</figure>
+
+<script>
+	import { initSteppers } from '../lib/stepper';
+	initSteppers();
+</script>
+
+<style>
+	figure {
+		margin: 0 0 3rem;
+		min-width: 0;
+	}
+	figcaption {
+		margin-bottom: 1rem;
+		color: var(--muted);
+		font-size: 0.8125rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.steps {
+		display: grid;
+		gap: 1rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.steps > li[hidden] {
+		display: none;
+	}
+	.steps > li {
+		min-width: 0;
+		padding: 0.75rem 1rem 1rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+	}
+	header {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+	.num {
+		display: grid;
+		place-items: center;
+		flex: none;
+		width: 1.75rem;
+		height: 1.75rem;
+		border: 1px solid var(--line);
+		border-radius: 50%;
+		color: var(--line);
+		font-size: 0.8125rem;
+	}
+	h3 {
+		margin: 0;
+		font-size: 1rem;
+	}
+	.body {
+		display: grid;
+		grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+		gap: 1rem 1.5rem;
+		align-items: center;
+		margin-top: 0.5rem;
+	}
+	.caption {
+		max-width: var(--measure);
+		margin: 0;
+	}
+	svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		font-family: var(--font-mono);
+	}
+	.ring {
+		fill: none;
+		stroke: var(--rule);
+		stroke-width: 1.5;
+	}
+	.key rect {
+		fill: var(--ink);
+	}
+	.key text {
+		fill: var(--ink);
+		font-size: 12px;
+	}
+	.node circle {
+		fill: var(--surface);
+		stroke: var(--line);
+		stroke-width: 1.5;
+	}
+	.node text {
+		fill: var(--ink);
+	}
+	.port {
+		font-size: 14px;
+		font-weight: 600;
+	}
+	.state {
+		font-size: 11px;
+		fill: var(--muted);
+	}
+	.node .hash {
+		fill: var(--muted);
+		font-size: 12px;
+	}
+	.node.has-copy circle {
+		stroke-width: 3;
+	}
+	.node.is-lit circle {
+		fill: var(--line);
+	}
+	.node.is-lit .port,
+	.node.is-lit .state {
+		fill: var(--surface);
+	}
+	.node.is-error circle {
+		fill: var(--error-bg);
+		stroke: var(--error);
+		stroke-dasharray: 4 3;
+		stroke-width: 2;
+	}
+	.node.is-error .port,
+	.node.is-error .state {
+		fill: var(--error);
+	}
+	.msg line {
+		stroke: var(--line);
+		stroke-width: 2;
+	}
+	.msg polygon {
+		fill: var(--line);
+	}
+	.msg.is-ack line,
+	.msg.is-alive line {
+		stroke-dasharray: 5 4;
+	}
+	.msg.is-fail line {
+		stroke: var(--error);
+		stroke-dasharray: 3 4;
+	}
+	.msg.is-fail polygon {
+		fill: var(--error);
+	}
+	.is-stepper .msg {
+		animation: msg-in 0.35s ease-out backwards;
+		animation-delay: calc(var(--d) * 0.5s);
+	}
+	@keyframes msg-in {
+		from {
+			opacity: 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.is-stepper .msg {
+			animation: none;
+		}
+	}
+	.legend {
+		margin: 0.75rem 0 0;
+		color: var(--muted);
+		font-size: 0.75rem;
+	}
+	.err {
+		color: var(--error);
+	}
+	.limit {
+		max-width: var(--measure);
+		margin: 1rem 0 0;
+		padding: 0.5rem 0.75rem;
+		border-left: 3px solid var(--error);
+		background: var(--error-bg);
+	}
+	@media (max-width: 40rem) {
+		.body {
+			grid-template-columns: 1fr;
+		}
+		svg {
+			max-width: 24rem;
+			margin-inline: auto;
+		}
+	}
+</style>

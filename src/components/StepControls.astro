@@ -1,0 +1,44 @@
+---
+// Prev/Next controls and the aria-live region for an explainer stepper (see src/lib/stepper.ts).
+interface Props {
+	total: number;
+}
+const { total } = Astro.props;
+---
+
+<div class="controls" data-controls hidden>
+	<button type="button" data-go="-1">← Prev</button>
+	<span class="mono" data-count aria-hidden="true">1 / {total}</span>
+	<button type="button" data-go="1">Next →</button>
+	<span class="hint">or use the ← → keys</span>
+</div>
+<p class="sr-only" aria-live="polite" data-live></p>
+
+<style>
+	.controls {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 0.75rem;
+	}
+	.controls[hidden] {
+		display: none;
+	}
+	button {
+		padding: 0.375rem 0.75rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+		color: var(--line);
+		font: 0.8125rem var(--font-mono);
+		cursor: pointer;
+	}
+	button:hover {
+		background: color-mix(in srgb, var(--line) 9%, var(--surface));
+	}
+	span {
+		color: var(--muted);
+		font-size: 0.8125rem;
+	}
+</style>

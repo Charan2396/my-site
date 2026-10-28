@@ -1,0 +1,283 @@
+---
+import StepControls from './StepControls.astro';
+import { reconSteps, SOURCE } from '../lib/recon';
+
+const tag = { ok: '', missing: 'missing', stale: 'stale', deleted: 'deleted', fixed: 'resent' } as const;
+---
+
+<figure class="recon" data-stepper>
+	<figcaption class="mono">fig. 1 · reconciliation across three instances · invented sample data, table ORDER_LINE</figcaption>
+	<StepControls total={reconSteps.length} />
+	<ol class="steps">
+		{
+			reconSteps.map((st, i) => (
+				<li data-step-item>
+					<header>
+						<span class="num mono" aria-hidden="true">{i + 1}</span>
+						<h3>{st.title}</h3>
+					</header>
+					<p class="caption">{st.caption}</p>
+					<div class="board">
+						{st.cols.map((c) => (
+							<section class="inst" aria-label={`Instance ${c.inst}`}>
+								<h4 class="mono">
+									Instance {c.inst} <span>· {c.inst === SOURCE ? 'source' : 'target'}</span>
+								</h4>
+								<ul class="rows mono">
+									{c.list.map((r) => (
+										<li class:list={['row', `is-${r.state}`]}>
+											<span>{r.key}</span>
+											{tag[r.state] && <span class="tag">{tag[r.state]}</span>}
+										</li>
+									))}
+								</ul>
+								{st.compare ? (
+									<ul class="fps mono" aria-label={`Fingerprints, Instance ${c.inst}`}>
+										{c.fps.map((f) => (
+											<li class:list={['fp', { 'is-error': f.fullDiff || f.recentDiff }]}>
+												<span class="co">company {f.co}</span>
+												<span class:list={{ diff: f.fullDiff }}>
+													full {f.full}
+													{f.fullDiff && <span class="ne"> ≠ A</span>}
+												</span>
+												<span class:list={{ diff: f.recentDiff }}>
+													30d {f.recent}
+													{f.recentDiff && <span class="ne"> ≠ A</span>}
+												</span>
+											</li>
+										))}
+									</ul>
+								) : (
+									<p class="fp-none mono">not fingerprinted yet</p>
+								)}
+							</section>
+						))}
+					</div>
+					<div class:list={['panel', { 'is-error': st.drift.length > 0, 'is-clean': st.compare && !st.drift.length }]}>
+						<h4 class="mono">Drift classification</h4>
+						{!st.compare ? (
+							<p>Not compared yet.</p>
+						) : st.drift.length === 0 ? (
+							<p>Zero difference: every fingerprint in B and C matches A.</p>
+						) : (
+							<ul>
+								{st.drift.map((d) => (
+									<li class="drift">
+										<strong>
+											Instance {d.inst} · company {d.co} · {d.kind}
+										</strong>{' '}
+										({d.detail})
+										{st.drill && (
+											<span class="keys mono">
+												{d.kind === 'missing in target' ? 'in A, not in ' : 'not in A, still in '}
+												{d.inst}: {d.keys.join(', ')}
+											</span>
+										)}
+									</li>
+								))}
+							</ul>
+						)}
+					</div>
+				</li>
+			))
+		}
+	</ol>
+</figure>
+
+<script>
+	import { initSteppers } from '../lib/stepper';
+	initSteppers();
+</script>
+
+<style>
+	figure {
+		margin: 0;
+		min-width: 0;
+	}
+	figcaption {
+		margin-bottom: 1rem;
+		color: var(--muted);
+		font-size: 0.8125rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.steps {
+		display: grid;
+		gap: 1rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.steps > li[hidden] {
+		display: none;
+	}
+	.steps > li {
+		min-width: 0;
+		padding: 0.75rem 1rem 1rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+	}
+	.is-stepper .steps > li:not([hidden]) {
+		animation: arrive 0.2s ease-out;
+	}
+	@keyframes arrive {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+	}
+	header {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+	.num {
+		display: grid;
+		place-items: center;
+		flex: none;
+		width: 1.75rem;
+		height: 1.75rem;
+		border: 1px solid var(--line);
+		border-radius: 50%;
+		color: var(--line);
+		font-size: 0.8125rem;
+	}
+	h3 {
+		margin: 0;
+		font-size: 1rem;
+	}
+	.caption {
+		max-width: var(--measure);
+		margin: 0.5rem 0 1rem;
+	}
+	h4 {
+		margin: 0 0 0.5rem;
+		font-size: 0.8125rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--line);
+	}
+	h4 span {
+		color: var(--muted);
+	}
+	.board {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 1rem;
+	}
+	.inst {
+		min-width: 0;
+		padding: 0.75rem;
+		border: 1px dashed var(--rule);
+		border-radius: var(--radius);
+	}
+	.rows,
+	.fps {
+		display: grid;
+		gap: 0.25rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.8125rem;
+	}
+	.row {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.125rem 0.375rem;
+		border: 1px solid var(--rule);
+		border-radius: var(--radius);
+	}
+	.tag {
+		font-size: 0.75rem;
+	}
+	.row.is-missing,
+	.row.is-stale {
+		border-color: var(--error);
+		background: var(--error-bg);
+		color: var(--error);
+	}
+	.row.is-missing {
+		border-style: dashed;
+	}
+	.row.is-missing > span:first-child,
+	.row.is-deleted > span:first-child {
+		text-decoration: line-through;
+	}
+	.row.is-deleted {
+		border-style: dashed;
+		color: var(--muted);
+	}
+	.row.is-fixed {
+		border-color: var(--line);
+		background: color-mix(in srgb, var(--line) 12%, var(--surface));
+		color: var(--line);
+	}
+	.fps {
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px dashed var(--rule);
+		gap: 0.5rem;
+	}
+	.fp {
+		display: grid;
+		padding-left: 0.5rem;
+		border-left: 3px solid var(--line);
+		color: var(--muted);
+	}
+	.fp .co {
+		color: var(--ink);
+	}
+	.fp.is-error {
+		border-left-color: var(--error);
+	}
+	.fp .diff {
+		color: var(--error);
+		font-weight: 600;
+	}
+	.fp-none {
+		margin: 0.75rem 0 0;
+		padding-top: 0.75rem;
+		border-top: 1px dashed var(--rule);
+		color: var(--muted);
+		font-size: 0.8125rem;
+	}
+	.panel {
+		margin-top: 1rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--rule);
+		border-left: 3px solid var(--rule);
+		border-radius: var(--radius);
+	}
+	.panel.is-error {
+		border-color: var(--error);
+		background: var(--error-bg);
+	}
+	.panel.is-error h4 {
+		color: var(--error);
+	}
+	.panel.is-clean {
+		border-left-color: var(--line);
+	}
+	.panel p,
+	.panel ul {
+		margin: 0;
+	}
+	.panel ul {
+		display: grid;
+		gap: 0.5rem;
+		padding-left: 1.25rem;
+	}
+	.keys {
+		display: block;
+		margin-top: 0.125rem;
+		font-size: 0.8125rem;
+	}
+	@media (max-width: 48rem) {
+		.board {
+			grid-template-columns: 1fr;
+			gap: 0.75rem;
+		}
+	}
+</style>

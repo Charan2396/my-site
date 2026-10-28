@@ -1,0 +1,108 @@
+---
+import Base from '../../layouts/Base.astro';
+import DynamoRing from '../../components/DynamoRing.astro';
+import { ring, scenarios, short } from '../../lib/dynamo';
+import { url } from '../../lib/url';
+---
+
+<Base
+	title="Simple Dynamo: a replicated key-value store"
+	description="An interactive ring: how my 2018–19 Dynamo-style coursework store places keys, replicates writes, recovers a failed node and fails over a read."
+>
+	<article>
+		<p class="eyebrow mono">University at Buffalo coursework, 2018–19</p>
+		<h1>Simple Dynamo: a replicated key-value store</h1>
+		<p class="lede">
+			A Dynamo-style distributed key-value store running on five Android emulator nodes, written in Java. Keys and node IDs
+			are hashed with SHA-1 onto a consistent-hashing ring. Each key belongs to the first node clockwise and is replicated to
+			that node's next two successors, so every key has three copies. Nodes talk over raw TCP sockets, with a background
+			server thread and serialized client tasks. Each replica stores data in SQLite, and a newer write replaces an older one.
+			Reads go to the key's coordinator and fall back to the last replica in the chain if the coordinator is down. Writes that
+			a dead replica misses are buffered by the sender, and a restarting node pulls them back from its peers when it rejoins.
+		</p>
+
+		<h2>The ring</h2>
+		<p>
+			Each emulator is named by its port. Sorting the SHA-1 hashes of the five port numbers gives the ring order, the same
+			order the code uses:
+		</p>
+		<ol class="order mono">
+			{
+				ring.map((n) => (
+					<li>
+						{n.port} <span>{short(n.hash)}…</span>
+					</li>
+				))
+			}
+		</ol>
+		<p>Step through each scenario with Prev and Next, or the arrow keys.</p>
+
+		{scenarios.map((s, i) => <DynamoRing scenario={s} fig={i + 1} />)}
+
+		<h2>What it doesn't do</h2>
+		<ul class="limits">
+			<li>No quorum: a write is sent to all three replicas in turn, and a read trusts the one replica that answers.</li>
+			<li>No versioning or vector clocks. Stubs for them exist in the code, but nothing calls them.</li>
+			<li>The buffer of failed writes is one list per sender, not one per destination.</li>
+		</ul>
+
+		<p class="code mono"><a href="https://github.com/Charan2396/Amazon-Dynamo-DB-">Code on GitHub →</a></p>
+		<p class="back mono"><a href={url('projects/')}>← All projects</a></p>
+	</article>
+</Base>
+
+<style>
+	.eyebrow {
+		margin: 0;
+		color: var(--line);
+		font-size: 0.8125rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	h1 {
+		max-width: var(--measure);
+		margin-block: 0.5rem 1rem;
+		font-size: clamp(1.75rem, 5vw, 2.75rem);
+	}
+	.lede,
+	p,
+	.limits {
+		max-width: var(--measure);
+	}
+	.lede {
+		font-size: 1.1875rem;
+	}
+	h2 {
+		margin-block: 2.5rem 0.75rem;
+		font-size: 1.375rem;
+	}
+	.order {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 0 0 1rem;
+		padding: 0;
+		list-style: none;
+		font-size: 0.875rem;
+	}
+	.order li {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+	}
+	.order span {
+		color: var(--muted);
+	}
+	.limits {
+		padding-left: 1.25rem;
+	}
+	.code {
+		margin-top: 2rem;
+		font-size: 0.875rem;
+	}
+	.back {
+		margin-top: 1rem;
+		font-size: 0.875rem;
+	}
+</style>

@@ -47,6 +47,7 @@ Moved up from "Follow a record": this is what makes the site more than the resum
 - 3–5 more stories, each written once its VERIFY flags are cleared.
 - Shipped 2026-10-28 via `docs/plans/2026-10-28-portfolio-v2.md` phases 1–2: resume, build log and projects pages are live,
   and all five stages have a story (VERIFY figures published as they are, per the v2 "go live first" decision).
+- Shipped 2026-10-28: v2 phases 3 and 5 (Working with me page, home impact strip, reconciliation and Simple Dynamo explainers).
 
 ## 7. Build log page
 - Backfill entries from the setup session: brief → CLAUDE.md → GitHub dig → this plan.

@@ -1,8 +1,14 @@
 ---
 import { getCollection, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import { url } from '../lib/url';
 
 const projects = (await getCollection('projects', (p) => !p.data.draft)).sort((a, b) => a.data.order - b.data.order);
+// interactive explainers, linked from the card they belong to
+const explainers: Record<string, { href: string; text: string }> = {
+	'simple-dynamo': { href: 'projects/simple-dynamo/', text: 'Try the interactive ring' },
+	'this-site': { href: 'reconciliation/', text: 'Also on this site: the reconciliation explainer' },
+};
 const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (await render(p)).Content })));
 ---
 
@@ -26,6 +32,11 @@ const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (awa
 						<div class="prose">
 							<Content />
 						</div>
+						{explainers[p.id] && (
+							<p class="code mono">
+								<a href={url(explainers[p.id].href)}>{explainers[p.id].text} →</a>
+							</p>
+						)}
 						{p.data.link && (
 							<p class="code mono">
 								<a href={p.data.link}>
@@ -92,13 +103,8 @@ const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (awa
 		margin: 0;
 		font-size: 0.875rem;
 	}
-	.sr-only {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip-path: inset(50%);
-		white-space: nowrap;
+	.code + .code {
+		margin-top: 0.5rem;
 	}
 	@media (max-width: 40rem) {
 		.card {
