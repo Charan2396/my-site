@@ -17,8 +17,10 @@ const stage = stages[stageIndex];
 
 <Base title={story.data.title} description={story.data.summary}>
 	<article>
-		<p class="eyebrow mono">fig. {stageIndex + 1} · {stage.label} · {stage.system}</p>
-		<h1>{story.data.title}</h1>
+		<header transition:name={`stage-${stage.key}`}>
+			<p class="eyebrow mono">fig. {stageIndex + 1} · {stage.label} · {stage.system}</p>
+			<h1>{story.data.title}</h1>
+		</header>
 		<p class="lede">{story.data.summary}</p>
 
 		{

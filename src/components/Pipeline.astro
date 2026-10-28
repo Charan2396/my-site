@@ -23,13 +23,13 @@ const sourceStory = storyHref('source');
 				stages.map((s, i) => {
 					const href = storyHref(s.key);
 					return (
-						<li>
+						<li style={`--i: ${i}`}>
 							<button class="pick" type="button" data-pick={i} aria-pressed={i === 0 ? 'true' : 'false'} hidden>
 								<span class="sr-only">
 									Show the record at stage {i + 1}, {s.label}
 								</span>
 							</button>
-							<div class="stage" data-stage>
+							<div class="stage" data-stage transition:name={`stage-${s.key}`}>
 								<span class="num mono" aria-hidden="true">{i + 1}</span>
 								<span class="label mono">{s.label}</span>
 								<span class="system">{s.system}</span>
@@ -45,6 +45,7 @@ const sourceStory = storyHref('source');
 									</a>
 								)}
 							</div>
+							{i < stages.length - 1 && <i class="packet" aria-hidden="true" />}
 						</li>
 					);
 				})
@@ -52,6 +53,16 @@ const sourceStory = storyHref('source');
 		</ol>
 		<span class="token mono" aria-hidden="true" data-token hidden><i></i>4471/2</span>
 	</figure>
+	<script is:inline>
+		// Draw fig. 1 in once per visit. Runs before first paint so the boxes never flash; without JS nothing hides.
+		(function (fig) {
+			try {
+				if (sessionStorage.getItem('fig1-drawn')) return;
+				sessionStorage.setItem('fig1-drawn', '1');
+			} catch (e) {}
+			fig.classList.add('draw');
+		})(document.currentScript.previousElementSibling);
+	</script>
 
 	<figure class="records">
 		<figcaption class="mono">
@@ -93,6 +104,9 @@ const sourceStory = storyHref('source');
 
 	<figure class="incident" data-incident>
 		<figcaption class="mono">fig. 3 · incident replay: one bad message</figcaption>
+		<ol class="strip mono" aria-hidden="true">
+			{stages.map((_, i) => <li data-strip>{i + 1}</li>)}
+		</ol>
 		<button class="start" type="button" data-replay hidden>Replay the incident: inject the corrupt message</button>
 		<div class="controls" data-icontrols hidden>
 			<button type="button" data-istep="-1">← Prev</button>
@@ -143,128 +157,138 @@ const sourceStory = storyHref('source');
 </div>
 
 <script>
-	for (const root of document.querySelectorAll<HTMLElement>('[data-record-view]')) {
-		const versions = [...root.querySelectorAll<HTMLElement>('[data-version]')];
-		const picks = [...root.querySelectorAll<HTMLButtonElement>('[data-pick]')];
-		const boxes = [...root.querySelectorAll<HTMLElement>('[data-stage]')];
-		const live = root.querySelector<HTMLElement>('[data-live]')!;
-		const count = root.querySelector<HTMLElement>('[data-count]')!;
-		const panel = root.querySelector<HTMLElement>('.records')!;
-		const token = root.querySelector<HTMLElement>('[data-token]')!;
-		const steps = [...root.querySelectorAll<HTMLElement>('[data-step-item]')];
-		const stepList = root.querySelector<HTMLElement>('[data-steps]')!;
-		const startBtn = root.querySelector<HTMLButtonElement>('[data-replay]')!;
-		const iControls = root.querySelector<HTMLElement>('[data-icontrols]')!;
-		const iCount = root.querySelector<HTMLElement>('[data-icount]')!;
-		const playBtn = root.querySelector<HTMLButtonElement>('[data-play]')!;
-		const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-		let current = 0;
-		let step = -1; // -1 = not replaying
-		let at = 0;
-		let timer = 0;
+	import { onPage } from '../lib/stepper';
+	onPage((signal) => {
+		for (const root of document.querySelectorAll<HTMLElement>('[data-record-view]')) {
+			const versions = [...root.querySelectorAll<HTMLElement>('[data-version]')];
+			const picks = [...root.querySelectorAll<HTMLButtonElement>('[data-pick]')];
+			const boxes = [...root.querySelectorAll<HTMLElement>('[data-stage]')];
+			const strip = [...root.querySelectorAll<HTMLElement>('[data-strip]')];
+			const live = root.querySelector<HTMLElement>('[data-live]')!;
+			const count = root.querySelector<HTMLElement>('[data-count]')!;
+			const panel = root.querySelector<HTMLElement>('.records')!;
+			const token = root.querySelector<HTMLElement>('[data-token]')!;
+			const steps = [...root.querySelectorAll<HTMLElement>('[data-step-item]')];
+			const stepList = root.querySelector<HTMLElement>('[data-steps]')!;
+			const startBtn = root.querySelector<HTMLButtonElement>('[data-replay]')!;
+			const iControls = root.querySelector<HTMLElement>('[data-icontrols]')!;
+			const iCount = root.querySelector<HTMLElement>('[data-icount]')!;
+			const playBtn = root.querySelector<HTMLButtonElement>('[data-play]')!;
+			const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+			let current = 0;
+			let step = -1; // -1 = not replaying
+			let at = 0;
+			let timer = 0;
 
-		// move the record token onto stage box `i` (top-right corner, riding the box border)
-		const place = () => {
-			const li = boxes[at].parentElement!;
-			const x = li.offsetLeft + li.offsetWidth - token.offsetWidth - 12;
-			const y = li.offsetTop - token.offsetHeight / 2;
-			token.style.transform = `translate(${x}px, ${y}px)`;
-		};
-		const paint = (i: number, lit = [i], error = false) => {
-			at = i;
-			boxes.forEach((b, j) => {
-				b.classList.toggle('is-on', lit.includes(j));
-				b.classList.toggle('is-error', error && j === 2);
+			// move the record token onto stage box `i` (top-right corner, riding the box border)
+			const place = () => {
+				const li = boxes[at].parentElement!;
+				const x = li.offsetLeft + li.offsetWidth - token.offsetWidth - 12;
+				const y = li.offsetTop - token.offsetHeight / 2;
+				token.style.transform = `translate(${x}px, ${y}px)`;
+			};
+			const paint = (i: number, lit = [i], error = false) => {
+				at = i;
+				for (const els of [boxes, strip])
+					els.forEach((b, j) => {
+						b.classList.toggle('is-on', lit.includes(j));
+						b.classList.toggle('is-error', error && j === 2);
+					});
+				place();
+			};
+
+			const show = (i: number, announce = true) => {
+				current = (i + versions.length) % versions.length;
+				versions.forEach((v, j) => (v.hidden = j !== current));
+				picks.forEach((b, j) => b.setAttribute('aria-pressed', String(j === current)));
+				count.textContent = `${current + 1} / ${versions.length}`;
+				if (step < 0) paint(current);
+				if (announce) live.textContent = `Stage ${current + 1} of ${versions.length}: ${versions[current].querySelector('h3')!.textContent}`;
+			};
+
+			const stopPlay = () => {
+				clearInterval(timer);
+				timer = 0;
+				playBtn.textContent = 'Play';
+			};
+			const go = (n: number) => {
+				step = Math.max(0, Math.min(steps.length - 1, n));
+				steps.forEach((s, j) => (s.hidden = j !== step));
+				const s = steps[step].dataset;
+				paint(Number(s.at), s.lit ? s.lit.split(' ').map(Number) : [], 'error' in s);
+				iCount.textContent = `${step + 1} / ${steps.length}`;
+				live.textContent = `Incident step ${step + 1} of ${steps.length}: ${steps[step].querySelector('h3')!.textContent}`;
+				if (step === steps.length - 1) stopPlay();
+			};
+			const exitReplay = (focus = true) => {
+				if (step < 0) return;
+				stopPlay();
+				step = -1;
+				root.classList.remove('in-replay');
+				stepList.hidden = iControls.hidden = true;
+				startBtn.hidden = false;
+				paint(current);
+				live.textContent = `Replay closed. Stage ${current + 1} of ${versions.length}.`;
+				if (focus) startBtn.focus();
+			};
+
+			root.classList.add('is-stepper');
+			for (const el of [...picks, root.querySelector<HTMLElement>('[data-controls]')!, startBtn, token]) el.hidden = false;
+			stepList.hidden = true;
+			const syncPlay = () => (playBtn.hidden = reduced.matches);
+			syncPlay();
+			reduced.addEventListener('change', () => (stopPlay(), syncPlay()), { signal });
+			signal.addEventListener('abort', stopPlay);
+			// ambient packets pause in a background tab
+			const away = () => root.classList.toggle('is-away', document.hidden);
+			document.addEventListener('visibilitychange', away, { signal });
+			away();
+
+			picks.forEach((b, j) =>
+				b.addEventListener('click', () => {
+					exitReplay(false);
+					show(j);
+					// on narrow screens the panel sits below the stacked stages
+					panel.scrollIntoView({ block: 'nearest', behavior: reduced.matches ? 'auto' : 'smooth' });
+				}),
+			);
+			for (const b of root.querySelectorAll<HTMLButtonElement>('[data-step]'))
+				b.addEventListener('click', () => (exitReplay(false), show(current + Number(b.dataset.step))));
+			for (const b of root.querySelectorAll<HTMLButtonElement>('[data-istep]'))
+				b.addEventListener('click', () => (stopPlay(), go(step + Number(b.dataset.istep))));
+			startBtn.addEventListener('click', () => {
+				root.classList.add('in-replay');
+				startBtn.hidden = true;
+				stepList.hidden = iControls.hidden = false;
+				go(0);
+				iControls.querySelector<HTMLButtonElement>('[data-istep="1"]')!.focus();
 			});
-			place();
-		};
-
-		const show = (i: number, announce = true) => {
-			current = (i + versions.length) % versions.length;
-			versions.forEach((v, j) => (v.hidden = j !== current));
-			picks.forEach((b, j) => b.setAttribute('aria-pressed', String(j === current)));
-			count.textContent = `${current + 1} / ${versions.length}`;
-			if (step < 0) paint(current);
-			if (announce) live.textContent = `Stage ${current + 1} of ${versions.length}: ${versions[current].querySelector('h3')!.textContent}`;
-		};
-
-		const stopPlay = () => {
-			clearInterval(timer);
-			timer = 0;
-			playBtn.textContent = 'Play';
-		};
-		const go = (n: number) => {
-			step = Math.max(0, Math.min(steps.length - 1, n));
-			steps.forEach((s, j) => (s.hidden = j !== step));
-			const s = steps[step].dataset;
-			paint(Number(s.at), s.lit ? s.lit.split(' ').map(Number) : [], 'error' in s);
-			iCount.textContent = `${step + 1} / ${steps.length}`;
-			live.textContent = `Incident step ${step + 1} of ${steps.length}: ${steps[step].querySelector('h3')!.textContent}`;
-			if (step === steps.length - 1) stopPlay();
-		};
-		const exitReplay = (focus = true) => {
-			if (step < 0) return;
-			stopPlay();
-			step = -1;
-			root.classList.remove('in-replay');
-			stepList.hidden = iControls.hidden = true;
-			startBtn.hidden = false;
-			paint(current);
-			live.textContent = `Replay closed. Stage ${current + 1} of ${versions.length}.`;
-			if (focus) startBtn.focus();
-		};
-
-		root.classList.add('is-stepper');
-		for (const el of [...picks, root.querySelector<HTMLElement>('[data-controls]')!, startBtn, token]) el.hidden = false;
-		stepList.hidden = true;
-		const syncPlay = () => (playBtn.hidden = reduced.matches);
-		syncPlay();
-		reduced.addEventListener('change', () => (stopPlay(), syncPlay()));
-
-		picks.forEach((b, j) =>
-			b.addEventListener('click', () => {
-				exitReplay(false);
-				show(j);
-				// on narrow screens the panel sits below the stacked stages
-				panel.scrollIntoView({ block: 'nearest', behavior: reduced.matches ? 'auto' : 'smooth' });
-			}),
-		);
-		for (const b of root.querySelectorAll<HTMLButtonElement>('[data-step]'))
-			b.addEventListener('click', () => (exitReplay(false), show(current + Number(b.dataset.step))));
-		for (const b of root.querySelectorAll<HTMLButtonElement>('[data-istep]'))
-			b.addEventListener('click', () => (stopPlay(), go(step + Number(b.dataset.istep))));
-		startBtn.addEventListener('click', () => {
-			root.classList.add('in-replay');
-			startBtn.hidden = true;
-			stepList.hidden = iControls.hidden = false;
-			go(0);
-			iControls.querySelector<HTMLButtonElement>('[data-istep="1"]')!.focus();
-		});
-		root.querySelector('[data-exit]')!.addEventListener('click', () => exitReplay());
-		playBtn.addEventListener('click', () => {
-			if (timer) return stopPlay();
-			if (reduced.matches) return;
-			if (step === steps.length - 1) go(0);
-			playBtn.textContent = 'Pause';
-			timer = window.setInterval(() => go(step + 1), 2000);
-		});
-		root.addEventListener('keydown', (e) => {
-			// leave arrows alone inside scrollable record boxes
-			if (e.altKey || e.ctrlKey || e.metaKey || (e.target as HTMLElement).closest('pre')) return;
-			if (e.key === 'Escape' && step >= 0) return exitReplay();
-			if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-			e.preventDefault();
-			const d = e.key === 'ArrowRight' ? 1 : -1;
-			if (step >= 0) return stopPlay(), go(step + d);
-			show(current + d);
-			if (picks.includes(document.activeElement as HTMLButtonElement)) picks[current].focus();
-		});
-		addEventListener('resize', place);
-		document.fonts?.ready.then(place);
-		show(0, false);
-		// first placement without a slide; later moves animate (CSS transition, zeroed under reduced motion)
-		requestAnimationFrame(() => token.classList.add('can-move'));
-	}
+			root.querySelector('[data-exit]')!.addEventListener('click', () => exitReplay());
+			playBtn.addEventListener('click', () => {
+				if (timer) return stopPlay();
+				if (reduced.matches) return;
+				if (step === steps.length - 1) go(0);
+				playBtn.textContent = 'Pause';
+				timer = window.setInterval(() => go(step + 1), 2000);
+			});
+			root.addEventListener('keydown', (e) => {
+				// leave arrows alone inside scrollable record boxes
+				if (e.altKey || e.ctrlKey || e.metaKey || (e.target as HTMLElement).closest('pre')) return;
+				if (e.key === 'Escape' && step >= 0) return exitReplay();
+				if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+				e.preventDefault();
+				const d = e.key === 'ArrowRight' ? 1 : -1;
+				if (step >= 0) return stopPlay(), go(step + d);
+				show(current + d);
+				if (picks.includes(document.activeElement as HTMLButtonElement)) picks[current].focus();
+			});
+			addEventListener('resize', place, { signal });
+			document.fonts?.ready.then(place);
+			show(0, false);
+			// first placement without a slide; later moves animate (CSS transition, zeroed under reduced motion)
+			requestAnimationFrame(() => token.classList.add('can-move'));
+		}
+	});
 </script>
 
 <style>
@@ -332,9 +356,50 @@ const sourceStory = storyHref('source');
 		border-radius: var(--radius);
 		background: var(--surface);
 		color: var(--ink);
+		/* the box (a stacking context: view-transition-name, lift) sits above the .pick button but lets
+		   clicks through to it; only the story link takes the pointer */
+		position: relative;
+		z-index: 3;
+		pointer-events: none;
+		/* --sel: selection ring, --lift: hover shadow; kept apart so hover never drops the selection */
+		--sel: 0 0 transparent;
+		--lift: 0 0 transparent;
+		box-shadow: var(--sel), var(--lift);
 		transition:
 			box-shadow 0.15s,
-			background-color 0.15s;
+			background-color 0.15s,
+			transform 0.15s;
+	}
+	.pipeline li:hover .stage,
+	.pipeline li:focus-within .stage {
+		--lift: 0 6px 14px -6px color-mix(in srgb, var(--line) 55%, transparent);
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.pipeline li:hover .stage,
+		.pipeline li:focus-within .stage {
+			transform: translateY(-2px);
+		}
+	}
+	/* blueprint corner brackets ("dimension lines") around the selected box */
+	.stage.is-on::after {
+		content: '';
+		position: absolute;
+		inset: -6px;
+		pointer-events: none;
+		--b: var(--line);
+		background:
+			linear-gradient(var(--b) 0 0) top left / 10px 1px,
+			linear-gradient(var(--b) 0 0) top left / 1px 10px,
+			linear-gradient(var(--b) 0 0) top right / 10px 1px,
+			linear-gradient(var(--b) 0 0) top right / 1px 10px,
+			linear-gradient(var(--b) 0 0) bottom left / 10px 1px,
+			linear-gradient(var(--b) 0 0) bottom left / 1px 10px,
+			linear-gradient(var(--b) 0 0) bottom right / 10px 1px,
+			linear-gradient(var(--b) 0 0) bottom right / 1px 10px;
+		background-repeat: no-repeat;
+	}
+	.stage.is-error::after {
+		--b: var(--error);
 	}
 		/* with JS, a transparent button covers each box; the story link stays clickable above it */
 	.pick {
@@ -350,15 +415,13 @@ const sourceStory = storyHref('source');
 	.pick[hidden] {
 		display: none;
 	}
-	.pick:hover + .stage {
-		box-shadow: inset 0 0 0 1px var(--line);
+	.pick:hover + .stage:not(.is-on) {
+		--sel: inset 0 0 0 1px var(--line);
 	}
 	.stage.is-on {
 		border: 1px solid var(--line);
 		background: color-mix(in srgb, var(--line) 9%, var(--surface));
-		box-shadow:
-			inset 0 0 0 1px var(--line),
-			0 4px 0 -2px var(--line);
+		--sel: inset 0 0 0 1px var(--line), 0 4px 0 -2px var(--line);
 	}
 	.num {
 		display: grid;
@@ -401,6 +464,7 @@ const sourceStory = storyHref('source');
 		color: var(--line);
 	}
 	a.cta {
+		pointer-events: auto;
 		text-decoration: none;
 	}
 	a.cta:hover {
@@ -420,9 +484,7 @@ const sourceStory = storyHref('source');
 	.stage.is-error {
 		border-color: var(--error);
 		background: var(--error-bg);
-		box-shadow:
-			inset 0 0 0 1px var(--error),
-			0 4px 0 -2px var(--error);
+		--sel: inset 0 0 0 1px var(--error), 0 4px 0 -2px var(--error);
 	}
 	.stage.is-error .flag {
 		display: block;
@@ -474,6 +536,150 @@ const sourceStory = storyHref('source');
 	}
 	.in-replay .token i {
 		background: var(--error);
+	}
+
+	/* ambient flow: a packet rides each connector (JS on, motion allowed; paused in replay or a hidden tab) */
+	.packet {
+		display: none;
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.is-stepper .packet {
+			display: block;
+			position: absolute;
+			top: calc(2.25rem - 2px);
+			left: 100%;
+			width: 5px;
+			height: 5px;
+			background: var(--line);
+			opacity: 0;
+			pointer-events: none;
+			animation: flow-x 3.2s linear infinite backwards;
+			animation-delay: calc(var(--i) * 0.64s);
+		}
+		.draw .packet {
+			animation-delay: calc(2.2s + var(--i) * 0.64s);
+		}
+		.in-replay .packet,
+		.is-away .packet {
+			animation-play-state: paused;
+		}
+	}
+	@keyframes flow-x {
+		0%,
+		55% {
+			opacity: 0;
+			transform: translateX(0);
+		}
+		60%,
+		90% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+			transform: translateX(calc(2rem - 12px));
+		}
+	}
+	@keyframes flow-y {
+		0%,
+		55% {
+			opacity: 0;
+			transform: translateY(0);
+		}
+		60%,
+		90% {
+			opacity: 1;
+		}
+		100% {
+			opacity: 0;
+			transform: translateY(calc(1.5rem - 12px));
+		}
+	}
+
+	/* draw-in: a JS-added class (once per visit) traces boxes, then connectors, left to right */
+	@media (prefers-reduced-motion: no-preference) {
+		.draw .stage {
+			animation: pen 0.5s cubic-bezier(0.6, 0, 0.3, 1) backwards;
+			animation-delay: calc(var(--i) * 0.3s);
+		}
+		.draw .stage > * {
+			animation: ink 0.35s ease-out backwards;
+			animation-delay: calc(var(--i) * 0.3s + 0.4s);
+		}
+		.draw li::after,
+		.draw li::before {
+			animation: pen 0.25s ease-out backwards;
+			animation-delay: calc(var(--i) * 0.3s + 0.45s);
+		}
+		.draw li::before {
+			animation-delay: calc(var(--i) * 0.3s + 0.65s);
+		}
+		.draw .token {
+			animation: ink 0.3s ease-out backwards;
+			animation-delay: 1.8s;
+		}
+	}
+	@keyframes pen {
+		from {
+			clip-path: inset(0 100% 100% 0);
+		}
+		to {
+			clip-path: inset(0);
+		}
+	}
+	@keyframes ink {
+		from {
+			opacity: 0;
+		}
+	}
+
+	/* narrow screens, replay on: the five stages pinned at the top of fig. 3, mirroring fig. 1 */
+	.incident {
+		position: relative;
+	}
+	.strip {
+		display: none;
+	}
+	@media (max-width: 56rem) {
+		.in-replay .strip {
+			position: sticky;
+			top: 0;
+			z-index: 5;
+			display: flex;
+			gap: 0.5rem;
+			margin: 0 0 0.75rem;
+			padding: 0.5rem 0.75rem;
+			border: 1px solid var(--line);
+			border-radius: var(--radius);
+			background: var(--surface);
+			list-style: none;
+		}
+		.strip li {
+			display: grid;
+			place-items: center;
+			width: 1.75rem;
+			height: 1.75rem;
+			border: 1px solid var(--line);
+			border-radius: 50%;
+			color: var(--line);
+			font-size: 0.8125rem;
+		}
+		.strip li.is-on {
+			background: var(--line);
+			color: var(--surface);
+		}
+		.strip li.is-error {
+			border-color: var(--error);
+			background: var(--error);
+			color: var(--surface);
+		}
+	}
+
+	@media (max-width: 56rem) and (prefers-reduced-motion: no-preference) {
+		.is-stepper .packet {
+			top: 100%;
+			left: calc(1.875rem - 2px);
+			animation-name: flow-y;
+		}
 	}
 
 	/* fig. 2: the record at each stage */

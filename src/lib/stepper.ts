@@ -1,8 +1,7 @@
 // Client-side stepper for the explainers (same pattern as fig. 3 in Pipeline.astro).
 // Markup: [data-stepper="optional name"] > [data-controls hidden] with [data-go="-1|1"] and [data-count],
 // [data-live], and [data-step-item] > h3. Without JS every step stays visible as a numbered list.
-// Idempotent: roots get data-ready. Pass a signal so a later phase can run this on astro:page-load
-// and abort the listeners on astro:before-swap.
+// Idempotent: roots get data-ready. Run it through onPage() so listeners are released on navigation.
 export function initSteppers(signal?: AbortSignal) {
 	for (const root of document.querySelectorAll<HTMLElement>('[data-stepper]:not([data-ready])')) {
 		root.dataset.ready = '';
@@ -34,4 +33,14 @@ export function initSteppers(signal?: AbortSignal) {
 		);
 		go(0, false);
 	}
+}
+
+// Run init on every page load (ClientRouter fires astro:page-load on the first load and after each
+// navigation) and abort its listeners before the next swap, so they never stack up.
+export function onPage(init: (signal: AbortSignal) => void) {
+	document.addEventListener('astro:page-load', () => {
+		const ac = new AbortController();
+		document.addEventListener('astro:before-swap', () => ac.abort(), { once: true });
+		init(ac.signal);
+	});
 }

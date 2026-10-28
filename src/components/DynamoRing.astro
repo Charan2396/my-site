@@ -107,8 +107,8 @@ const state = (st: Scenario['steps'][number], port: string) =>
 </figure>
 
 <script>
-	import { initSteppers } from '../lib/stepper';
-	initSteppers();
+	import { initSteppers, onPage } from '../lib/stepper';
+	onPage(initSteppers);
 </script>
 
 <style>

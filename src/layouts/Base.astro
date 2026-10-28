@@ -1,5 +1,6 @@
 ---
 import { Font } from 'astro:assets';
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import { url } from '../lib/url';
 
@@ -34,6 +35,7 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 		<link rel="icon" href={url('favicon.ico')} />
 		<Font cssVariable="--font-sans" preload />
 		<Font cssVariable="--font-mono" />
+		<ClientRouter />
 	</head>
 	<body>
 		<a class="skip-link" href="#main">Skip to content</a>

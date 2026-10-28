@@ -29,9 +29,10 @@ const tiles = [
 </section>
 
 <script>
+	import { onPage } from '../lib/stepper';
 	// Count up once when scrolled into view. The HTML already holds the final values (no-JS and reduced motion).
-	// Safe to call more than once (e.g. on astro:page-load): counted elements are marked data-counted.
-	function init() {
+	// Runs on every astro:page-load; the observer is released when the page is swapped out.
+	function init(signal: AbortSignal) {
 		if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
 		const els = document.querySelectorAll<HTMLElement>('[data-count]:not([data-counted])');
 		if (!els.length) return;
@@ -51,12 +52,13 @@ const tiles = [
 				requestAnimationFrame(step);
 			}
 		});
+		signal.addEventListener('abort', () => io.disconnect());
 		for (const el of els) {
 			el.dataset.counted = '';
 			io.observe(el);
 		}
 	}
-	init();
+	onPage(init);
 </script>
 
 <style>

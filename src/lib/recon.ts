@@ -75,7 +75,7 @@ const defs: StepDef[] = [
 	{
 		title: 'Hand the exact keys to the repair process',
 		caption:
-			'The engine is read-only: it changes nothing itself. It hands the exact keys on. The missing key goes to the self-healing process, which sends it back to the mainframe to be resent. The stale key is flagged with its exact key for follow-up. Once both are fixed, the next fingerprint run shows zero difference.',
+			'The engine is read-only: it changes nothing itself. What it produces is exact keys: the missing one is what a key-replay repair needs, and the stale one is flagged for follow-up. Once both are fixed, the next fingerprint run shows zero difference.',
 		hold: { A: without('20/3310/2'), B: without('20/3310/2'), C: without('20/3310/2') },
 		compare: true,
 		fixed: ['C:10/5502/1'],
