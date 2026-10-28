@@ -30,6 +30,8 @@ const projects = defineCollection({
 	schema: z.object({
 		title: z.string(),
 		summary: z.string(),
+		// e.g. "University at Buffalo coursework, 2018–19"
+		label: z.string(),
 		link: z.url().optional(),
 		order: z.number().int().default(0),
 		draft: z.boolean().default(false),

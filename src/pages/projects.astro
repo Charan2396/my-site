@@ -1,0 +1,108 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const projects = (await getCollection('projects', (p) => !p.data.draft)).sort((a, b) => a.data.order - b.data.order);
+const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (await render(p)).Content })));
+---
+
+<Base title="Projects" description="Older coursework and side projects, described only by what the code shows.">
+	<h1>Projects</h1>
+	<p class="lede">
+		Work outside my day job: graduate coursework from the University at Buffalo, and this site. Each one is described only by
+		what its code shows.
+	</p>
+
+	<ol class="projects">
+		{
+			rendered.map(({ p, Content }, i) => (
+				<li>
+					<article class="card" aria-labelledby={`project-${p.id}`}>
+						<p class="caption mono">
+							fig. {i + 1} · {p.data.label}
+						</p>
+						<h2 id={`project-${p.id}`}>{p.data.title}</h2>
+						<p class="summary">{p.data.summary}</p>
+						<div class="prose">
+							<Content />
+						</div>
+						{p.data.link && (
+							<p class="code mono">
+								<a href={p.data.link}>
+									Code on GitHub<span class="sr-only">: {p.data.title}</span> →
+								</a>
+							</p>
+						)}
+					</article>
+				</li>
+			))
+		}
+	</ol>
+</Base>
+
+<style>
+	h1 {
+		margin-block: 0 1rem;
+		font-size: clamp(2rem, 6vw, 2.75rem);
+	}
+	.lede {
+		max-width: var(--measure);
+		margin-bottom: 2.5rem;
+		font-size: 1.1875rem;
+	}
+	.projects {
+		display: grid;
+		gap: 2rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.card {
+		max-width: calc(var(--measure) + 3rem);
+		padding: 1.25rem 1.5rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+	}
+	.caption {
+		margin: 0;
+		color: var(--muted);
+		font-size: 0.8125rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	h2 {
+		margin-block: 0.5rem 0.25rem;
+		font-size: 1.375rem;
+	}
+	.summary {
+		margin-block: 0 1rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid var(--rule);
+		color: var(--muted);
+	}
+	.prose :global(p) {
+		margin-block: 0 1rem;
+	}
+	/* no GitHub link after the prose: drop the trailing paragraph margin */
+	.prose:last-child > :global(:last-child) {
+		margin-bottom: 0;
+	}
+	.code {
+		margin: 0;
+		font-size: 0.875rem;
+	}
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+	@media (max-width: 40rem) {
+		.card {
+			padding: 1rem;
+		}
+	}
+</style>

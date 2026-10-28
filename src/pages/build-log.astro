@@ -1,0 +1,62 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+// Several entries share a date; the id's NN suffix breaks the tie.
+const entries = (await getCollection('buildLog')).sort(
+	(a, b) => b.data.date.getTime() - a.data.date.getTime() || b.id.localeCompare(a.id),
+);
+const rendered = await Promise.all(entries.map(async (e) => ({ e, Content: (await render(e)).Content })));
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+---
+
+<Base title="Build log" description="How this site is being built with Claude Code, mistakes included.">
+	<h1>Build log</h1>
+	<p class="lede">
+		How this site is being built with Claude Code, step by step. The mistakes stay in, because they are where most of the
+		lessons came from.
+	</p>
+
+	<ol class="log">
+		{
+			rendered.map(({ e, Content }) => (
+				<li>
+					<article class="prose" aria-labelledby={`entry-${e.id}`}>
+						<time class="mono" datetime={iso(e.data.date)}>{iso(e.data.date)}</time>
+						<h2 id={`entry-${e.id}`}>{e.data.title}</h2>
+						<Content />
+					</article>
+				</li>
+			))
+		}
+	</ol>
+</Base>
+
+<style>
+	h1 {
+		margin-block: 0 1rem;
+		font-size: clamp(2rem, 6vw, 2.75rem);
+	}
+	.lede {
+		max-width: var(--measure);
+		margin-bottom: 2.5rem;
+		font-size: 1.1875rem;
+	}
+	.log {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.log li + li {
+		margin-top: 3rem;
+	}
+	time {
+		display: block;
+		color: var(--line);
+		font-size: 0.8125rem;
+		letter-spacing: 0.08em;
+	}
+	.prose h2 {
+		margin-top: 0.25rem;
+	}
+</style>
