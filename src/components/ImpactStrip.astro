@@ -1,0 +1,119 @@
+---
+// Figures quoted from the first Experience bullet in content/resume.md.
+const tiles = [
+	{ prefix: '', count: 300, suffix: '+', unit: 'tables', caption: 'IMS, Db2 and VSAM, replicated into Oracle' },
+	{ prefix: '', count: 30, suffix: '+', unit: 'downstream teams', caption: 'served by the platform' },
+	{ prefix: '~', count: 10, suffix: 'M', unit: 'rows/day', caption: 'roughly, through the pipeline' },
+	{ prefix: '', count: 3, suffix: '', unit: 'Oracle instances', caption: 'production operational data stores' },
+];
+---
+
+<section class="impact" aria-labelledby="impact-heading">
+	<h2 id="impact-heading" class="mono">At a glance · the platform I run today</h2>
+	<ul>
+		{
+			tiles.map((t) => (
+				<li>
+					<span class="sr-only">{`${t.prefix}${t.count}${t.suffix} ${t.unit}: ${t.caption}`}</span>
+					<span class="figure" aria-hidden="true">
+						<span class="value mono" data-count={t.count} data-prefix={t.prefix} data-suffix={t.suffix}>{`${t.prefix}${t.count}${t.suffix}`}</span>
+						<span class="unit">{t.unit}</span>
+					</span>
+					<span class="caption mono" aria-hidden="true">
+						{t.caption}
+					</span>
+				</li>
+			))
+		}
+	</ul>
+</section>
+
+<script>
+	// Count up once when scrolled into view. The HTML already holds the final values (no-JS and reduced motion).
+	// Safe to call more than once (e.g. on astro:page-load): counted elements are marked data-counted.
+	function init() {
+		if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
+		const els = document.querySelectorAll<HTMLElement>('[data-count]:not([data-counted])');
+		if (!els.length) return;
+		const io = new IntersectionObserver((entries) => {
+			for (const e of entries) {
+				if (!e.isIntersecting) continue;
+				io.unobserve(e.target);
+				const el = e.target as HTMLElement;
+				const { prefix = '', suffix = '' } = el.dataset;
+				const target = Number(el.dataset.count);
+				const start = performance.now();
+				const step = (now: number) => {
+					const t = Math.min((now - start) / 800, 1);
+					el.textContent = prefix + Math.round(target * (1 - (1 - t) ** 3)) + suffix;
+					if (t < 1) requestAnimationFrame(step);
+				};
+				requestAnimationFrame(step);
+			}
+		});
+		for (const el of els) {
+			el.dataset.counted = '';
+			io.observe(el);
+		}
+	}
+	init();
+</script>
+
+<style>
+	.impact {
+		margin-bottom: 3rem;
+	}
+	h2 {
+		margin: 0 0 0.75rem;
+		color: var(--muted);
+		font-size: 0.8125rem;
+		font-weight: 400;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	ul {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+		gap: 0.75rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	li {
+		display: grid;
+		gap: 0.25rem;
+		padding: 0.875rem 1rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+	}
+	.figure {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0 0.5rem;
+	}
+	.value {
+		color: var(--line);
+		font-size: 2rem;
+		font-weight: 600;
+		line-height: 1.1;
+		font-variant-numeric: tabular-nums;
+	}
+	.unit {
+		font-weight: 600;
+	}
+	.caption {
+		color: var(--muted);
+		font-size: 0.75rem;
+		letter-spacing: 0.02em;
+	}
+	@media (max-width: 40rem) {
+		ul {
+			grid-template-columns: 1fr 1fr;
+		}
+		.value {
+			font-size: 1.625rem;
+		}
+	}
+</style>

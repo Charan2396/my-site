@@ -1,5 +1,6 @@
 import { defineCollection } from 'astro:content';
-import { glob } from 'astro/loaders';
+import { existsSync } from 'node:fs';
+import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { stageKeys } from './lib/stages';
 
@@ -38,4 +39,16 @@ const projects = defineCollection({
 	}),
 });
 
-export const collections = { stories, buildLog, projects };
+// Recommendations wait on a LinkedIn export. The file loader logs an error when its file is missing,
+// so the collection is registered only once content/testimonials.yaml exists (items: id, quote, role).
+const testimonials = defineCollection({
+	loader: file('content/testimonials.yaml'),
+	schema: z.object({ quote: z.string(), role: z.string() }),
+});
+
+export const collections = {
+	stories,
+	buildLog,
+	projects,
+	...(existsSync('content/testimonials.yaml') ? { testimonials } : {}),
+};

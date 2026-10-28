@@ -16,6 +16,7 @@ const {
 
 // Links are added only when their page ships, so the live site never has dead links.
 const nav = [
+	{ href: 'working-with-me/', label: 'Working with me' },
 	{ href: 'projects/', label: 'Projects' },
 	{ href: 'build-log/', label: 'Build log' },
 	{ href: 'resume/', label: 'Resume' },
@@ -120,5 +121,14 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 	}
 	main {
 		padding-block: 3rem;
+	}
+	/* Keep the four nav links on one line under the name on a 390px phone. */
+	@media (max-width: 30rem) {
+		nav ul {
+			gap: 0.25rem 0.875rem;
+		}
+		nav {
+			font-size: 0.9375rem;
+		}
 	}
 </style>
