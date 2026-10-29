@@ -37,14 +37,14 @@ const state = (st: Scenario['steps'][number], port: string) =>
 ---
 
 <figure class="dynamo" data-stepper={scenario.name} id={`scenario-${scenario.id}`}>
-	<figcaption class="mono">fig. {fig} · {scenario.name.toLowerCase()} · {scenario.title}</figcaption>
+	<figcaption><span class="eyebrow">{scenario.name}</span> <span class="title">{scenario.title}</span></figcaption>
 	<StepControls total={scenario.steps.length} />
 	<ol class="steps">
 		{
 			scenario.steps.map((st, i) => (
-				<li data-step-item>
+				<li class="card" data-step-item>
 					<header>
-						<span class="num mono" aria-hidden="true">{i + 1}</span>
+						<span class="num" aria-hidden="true">{i + 1}</span>
 						<h3>{st.title}</h3>
 					</header>
 					<div class="body">
@@ -99,7 +99,7 @@ const state = (st: Scenario['steps'][number], port: string) =>
 			))
 		}
 	</ol>
-	<p class="legend mono">
+	<p class="legend caption">
 		Ring order = SHA-1 order; the label by each node is its hash prefix. Solid arrow = request, dashed = ack,{' '}
 		<span class="err">red dashed = no answer</span>.
 	</p>
@@ -113,15 +113,19 @@ const state = (st: Scenario['steps'][number], port: string) =>
 
 <style>
 	figure {
-		margin: 0 0 3rem;
+		margin: 0 0 4rem;
 		min-width: 0;
 	}
 	figcaption {
+		display: grid;
+		gap: 0.25rem;
 		margin-bottom: 1rem;
-		color: var(--muted);
-		font-size: 0.8125rem;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
+	}
+	figcaption .title {
+		font-size: 1.3125rem;
+		font-weight: 700;
+		line-height: 1.2;
+		letter-spacing: -0.015em;
 	}
 	.steps {
 		display: grid;
@@ -135,10 +139,7 @@ const state = (st: Scenario['steps'][number], port: string) =>
 	}
 	.steps > li {
 		min-width: 0;
-		padding: 0.75rem 1rem 1rem;
-		border: 1px solid var(--line);
-		border-radius: var(--radius);
-		background: var(--surface);
+		padding: 1.25rem 1.5rem 1.5rem;
 	}
 	header {
 		display: flex;
@@ -149,16 +150,17 @@ const state = (st: Scenario['steps'][number], port: string) =>
 		display: grid;
 		place-items: center;
 		flex: none;
-		width: 1.75rem;
-		height: 1.75rem;
-		border: 1px solid var(--line);
+		width: 1.625rem;
+		height: 1.625rem;
 		border-radius: 50%;
-		color: var(--line);
+		background: var(--accent-fill);
+		color: var(--on-accent);
 		font-size: 0.8125rem;
+		font-weight: 600;
 	}
 	h3 {
 		margin: 0;
-		font-size: 1rem;
+		font-size: 1.0625rem;
 	}
 	.body {
 		display: grid;
@@ -191,7 +193,7 @@ const state = (st: Scenario['steps'][number], port: string) =>
 	}
 	.node circle {
 		fill: var(--surface);
-		stroke: var(--line);
+		stroke: var(--accent);
 		stroke-width: 1.5;
 	}
 	.node text {
@@ -213,7 +215,7 @@ const state = (st: Scenario['steps'][number], port: string) =>
 		stroke-width: 3;
 	}
 	.node.is-lit circle {
-		fill: var(--line);
+		fill: var(--accent);
 	}
 	.node.is-lit .port,
 	.node.is-lit .state {
@@ -230,11 +232,11 @@ const state = (st: Scenario['steps'][number], port: string) =>
 		fill: var(--error);
 	}
 	.msg line {
-		stroke: var(--line);
+		stroke: var(--accent);
 		stroke-width: 2;
 	}
 	.msg polygon {
-		fill: var(--line);
+		fill: var(--accent);
 	}
 	.msg.is-ack line,
 	.msg.is-alive line {
@@ -262,9 +264,8 @@ const state = (st: Scenario['steps'][number], port: string) =>
 		}
 	}
 	.legend {
-		margin: 0.75rem 0 0;
-		color: var(--muted);
-		font-size: 0.75rem;
+		margin: 0.875rem 0 0;
+		font-size: 0.8125rem;
 	}
 	.err {
 		color: var(--error);
@@ -272,9 +273,10 @@ const state = (st: Scenario['steps'][number], port: string) =>
 	.limit {
 		max-width: var(--measure);
 		margin: 1rem 0 0;
-		padding: 0.5rem 0.75rem;
-		border-left: 3px solid var(--error);
+		padding: 0.75rem 1rem;
+		border-radius: var(--radius);
 		background: var(--error-bg);
+		box-shadow: inset 3px 0 0 var(--error);
 	}
 	@media (max-width: 40rem) {
 		.body {

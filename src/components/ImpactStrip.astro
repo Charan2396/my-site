@@ -26,96 +26,101 @@ const stack = [
 ---
 
 <section class="impact" aria-labelledby="impact-heading">
-	<h2 id="impact-heading" class="mono">At a glance · the platform I run today</h2>
-	<ul>
+	<h2 id="impact-heading" class="eyebrow">At a glance · the platform I run today</h2>
+	<ul class="card card-lg">
 		{
 			tiles.map((t) => (
 				<li>
 					<span class="sr-only">{`${t.prefix}${t.count}${t.suffix} ${t.unit}: ${t.caption}`}</span>
 					<span class="figure" aria-hidden="true">
-						<span class="value mono">{`${t.prefix}${t.count}${t.suffix}`}</span>
+						<span class="value">{`${t.prefix}${t.count}${t.suffix}`}</span>
 						<span class="unit">{t.unit}</span>
 					</span>
-					<span class="caption mono" aria-hidden="true">
+					<span class="caption" aria-hidden="true">
 						{t.caption}
 					</span>
 				</li>
 			))
 		}
 	</ul>
-	<p class="stack mono"><span class="stack-label">Stack</span> {stack.join(' · ')}</p>
+	<p class="stack"><span class="stack-label">Stack</span> {stack.join(' · ')}</p>
 </section>
 
 <style>
 	.impact {
-		margin-bottom: 2rem;
+		margin-bottom: 4rem;
 	}
 	h2 {
-		margin: 0 0 0.75rem;
-		color: var(--muted);
-		font-size: 0.8125rem;
-		font-weight: 400;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
+		margin: 0 0 1rem;
 	}
 	ul {
 		display: grid;
 		/* 4 across when wide, 2 × 2 below that: never a 3 + 1 orphan */
 		grid-template-columns: repeat(4, 1fr);
-		gap: 0.75rem;
 		margin: 0;
-		padding: 0;
+		padding: 0.5rem 0;
 		list-style: none;
 	}
 	li {
 		display: grid;
-		gap: 0.25rem;
-		padding: 0.875rem 1rem;
-		border: 1px solid var(--line);
-		border-radius: var(--radius);
-		background: var(--surface);
+		align-content: start;
+		gap: 0.375rem;
+		padding: 1.5rem 1.75rem;
+	}
+	/* hairline between columns, not boxes */
+	li + li {
+		border-left: 1px solid var(--rule);
 	}
 	.figure {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		gap: 0 0.5rem;
+		display: grid;
+		gap: 0.125rem;
 	}
 	.value {
-		color: var(--line);
-		font-size: 2rem;
-		font-weight: 600;
-		line-height: 1.1;
+		color: var(--ink);
+		font-size: clamp(2.5rem, 4.5vw, 3.5rem);
+		font-weight: 700;
+		line-height: 1;
+		letter-spacing: -0.035em;
 		font-variant-numeric: tabular-nums;
 	}
 	.unit {
+		font-size: 1.0625rem;
 		font-weight: 600;
+		letter-spacing: -0.005em;
 	}
 	.caption {
-		color: var(--muted);
-		font-size: 0.75rem;
-		letter-spacing: 0.02em;
+		font-size: 0.875rem;
 	}
 	.stack {
-		margin: 0.75rem 0 0;
+		max-width: 60rem;
+		margin: 1.25rem 0 0;
 		color: var(--muted);
-		font-size: 0.8125rem;
-		line-height: 1.7;
+		font-size: 0.9375rem;
+		line-height: 1.6;
 	}
 	.stack-label {
 		margin-right: 0.5rem;
-		color: var(--line);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
+		color: var(--ink);
+		font-weight: 600;
 	}
 	@media (max-width: 64rem) {
 		ul {
 			grid-template-columns: 1fr 1fr;
+			padding: 0;
+		}
+		li:nth-child(odd) {
+			border-left: 0;
+		}
+		li:nth-child(n + 3) {
+			border-top: 1px solid var(--rule);
 		}
 	}
 	@media (max-width: 40rem) {
+		li {
+			padding: 1.25rem 1rem;
+		}
 		.value {
-			font-size: 1.625rem;
+			font-size: 2.25rem;
 		}
 	}
 </style>

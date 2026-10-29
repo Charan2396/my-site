@@ -10,7 +10,7 @@ import { url } from '../../lib/url';
 	description="An interactive ring: how my 2018–19 Dynamo-style coursework store places keys, replicates writes, recovers a failed node and fails over a read."
 >
 	<article>
-		<p class="eyebrow mono">University at Buffalo coursework, 2018–19</p>
+		<p class="eyebrow">University at Buffalo coursework, 2018–19</p>
 		<h1>Simple Dynamo: a replicated key-value store</h1>
 		<p class="lede">
 			A Dynamo-style distributed key-value store running on five Android emulator nodes, written in Java. Keys and node IDs
@@ -26,7 +26,7 @@ import { url } from '../../lib/url';
 			Each emulator is named by its port. Sorting the SHA-1 hashes of the five port numbers gives the ring order, the same
 			order the code uses:
 		</p>
-		<ol class="order mono">
+		<ol class="order">
 			{
 				ring.map((n) => (
 					<li>
@@ -46,50 +46,42 @@ import { url } from '../../lib/url';
 			<li>The buffer of failed writes is one list per sender, not one per destination.</li>
 		</ul>
 
-		<p class="code mono"><a href="https://github.com/Charan2396/Amazon-Dynamo-DB-">Code on GitHub →</a></p>
-		<p class="back mono"><a href={url('projects/')}>← All projects</a></p>
+		<p class="back">
+			<a class="btn press" href={url('projects/')}>← All projects</a>
+			<a class="btn press" href="https://github.com/Charan2396/Amazon-Dynamo-DB-">Code on GitHub →</a>
+		</p>
 	</article>
 </Base>
 
 <style>
-	.eyebrow {
-		margin: 0;
-		color: var(--line);
-		font-size: 0.8125rem;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-	}
 	h1 {
 		max-width: var(--measure);
-		margin-block: 0.5rem 1rem;
-		font-size: clamp(1.75rem, 5vw, 2.75rem);
+		margin-block: 0.75rem 1.25rem;
 	}
 	.lede,
 	p,
 	.limits {
 		max-width: var(--measure);
 	}
-	.lede {
-		font-size: 1.1875rem;
-	}
 	h2 {
-		margin-block: 2.5rem 0.75rem;
-		font-size: 1.375rem;
+		margin-block: 3.5rem 1rem;
 	}
 	.order {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
-		margin: 0 0 1rem;
+		margin: 0 0 1.25rem;
 		padding: 0;
 		list-style: none;
+		font-family: var(--font-mono);
 		font-size: 0.875rem;
 	}
 	.order li {
-		padding: 0.25rem 0.5rem;
-		border: 1px solid var(--line);
-		border-radius: var(--radius);
+		padding: 0.3125rem 0.75rem;
+		border: 1px solid var(--card-border);
+		border-radius: 999px;
 		background: var(--surface);
+		box-shadow: var(--shadow-sm);
 	}
 	.order span {
 		color: var(--muted);
@@ -97,12 +89,10 @@ import { url } from '../../lib/url';
 	.limits {
 		padding-left: 1.25rem;
 	}
-	.code {
-		margin-top: 2rem;
-		font-size: 0.875rem;
-	}
 	.back {
-		margin-top: 1rem;
-		font-size: 0.875rem;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.625rem;
+		margin-top: 2.5rem;
 	}
 </style>

@@ -1,5 +1,4 @@
 ---
-import { Font } from 'astro:assets';
 import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import { url } from '../lib/url';
@@ -32,15 +31,13 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 		<meta name="description" content={description} />
 		<link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
 		<link rel="icon" href={url('favicon.ico')} />
-		<Font cssVariable="--font-sans" preload />
-		<Font cssVariable="--font-mono" />
 		<ClientRouter />
 	</head>
 	<body>
 		<a class="skip-link" href="#main">Skip to content</a>
 		<header class="site-header">
 			<div class="wrap bar">
-				<a class="brand mono" href={url()} aria-label={`${name}, home`}>SA</a>
+				<a class="brand press" href={url()} aria-label={`${name}, home`}>SA</a>
 				{nav.length > 0 && (
 					<nav aria-label="Main">
 						<ul>
@@ -62,7 +59,7 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 		</main>
 
 		<footer class="site-footer">
-			<div class="wrap bar mono">
+			<div class="wrap bar">
 				<span>© {new Date().getFullYear()} {name}</span>
 				<nav aria-label="Footer">
 					<ul>
@@ -80,19 +77,55 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 </html>
 
 <style>
-	.site-header,
-	.site-footer {
-		border-block: 1px solid var(--rule);
-		background: var(--surface);
-	}
+	/* translucent material: content scrolls under it; a soft scroll-edge fade replaces a hard divider */
 	.site-header {
-		border-top: 0;
+		position: sticky;
+		top: 0;
+		z-index: 50;
+		background: var(--material);
+		-webkit-backdrop-filter: blur(20px) saturate(180%);
+		backdrop-filter: blur(20px) saturate(180%);
+		transition: var(--theme-ease);
+	}
+	.site-header::after {
+		content: '';
+		position: absolute;
+		inset: 100% 0 auto;
+		height: 0.75rem;
+		background: linear-gradient(var(--edge), transparent);
+		pointer-events: none;
+	}
+	@media (prefers-reduced-transparency: reduce) {
+		.site-header {
+			background: var(--bg);
+			-webkit-backdrop-filter: none;
+			backdrop-filter: none;
+		}
+	}
+	@media (prefers-contrast: more) {
+		.site-header {
+			background: var(--bg);
+			-webkit-backdrop-filter: none;
+			backdrop-filter: none;
+			border-bottom: 1px solid var(--rule);
+		}
+		.site-header::after {
+			display: none;
+		}
+	}
+	.site-header .bar {
+		min-height: var(--header-h);
+		padding-block: 0.375rem;
 	}
 	.site-footer {
 		margin-top: auto;
-		border-bottom: 0;
-		font-size: 0.875rem;
+		border-top: 1px solid var(--rule);
 		color: var(--muted);
+		font-size: 0.8125rem;
+		letter-spacing: 0.005em;
+	}
+	.site-footer .bar {
+		padding-block: 1.5rem 2rem;
 	}
 	.bar {
 		display: flex;
@@ -100,11 +133,11 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.5rem 1.5rem;
-		padding-block: 0.875rem;
 	}
 	.bar ul {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
 		gap: 0.25rem 1.25rem;
 		margin: 0;
 		padding: 0;
@@ -114,38 +147,64 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 	.brand {
 		display: grid;
 		place-items: center;
-		min-width: 2.25rem;
-		height: 2.25rem;
-		border: 1px solid var(--line);
-		border-radius: var(--radius);
-		color: var(--line);
-		font-weight: 600;
+		width: 2.125rem;
+		height: 2.125rem;
+		border-radius: 50%;
+		background: var(--ink);
+		color: var(--bg);
+		font-size: 0.8125rem;
+		font-weight: 700;
+		letter-spacing: 0.02em;
 		text-decoration: none;
-		letter-spacing: 0.04em;
 	}
 	.brand:hover {
-		background: var(--line);
-		color: var(--surface);
+		text-decoration: none;
+		background: var(--accent-fill);
+		color: var(--on-accent);
+	}
+	/* wayfinding: the current page is a filled pill, not just a colour */
+	.site-header nav ul {
+		gap: 0.25rem;
 	}
 	.site-header nav a {
+		display: block;
+		padding: 0.375rem 0.75rem;
+		border-radius: 999px;
 		color: var(--ink);
+		font-size: 0.875rem;
+		letter-spacing: 0.005em;
 		text-decoration: none;
 	}
-	nav a:hover,
-	nav a[aria-current='page'] {
-		color: var(--line);
-		text-decoration: underline;
+	.site-header nav a:hover {
+		background: var(--fill);
+	}
+	.site-header nav a[aria-current='page'] {
+		background: var(--fill-strong);
+		font-weight: 600;
+	}
+	.site-footer a {
+		color: var(--muted);
+	}
+	.site-footer a:hover,
+	.site-footer a[aria-current='page'] {
+		color: var(--ink);
+	}
+	.site-footer a[aria-current='page'] {
+		font-weight: 600;
 	}
 	main {
-		padding-block: 3rem;
+		padding-block: 3rem 5rem;
 	}
-	/* Keep the three nav links on one line under the name on a 390px phone. */
-	@media (max-width: 30rem) {
-		.site-header nav ul {
-			gap: 0.25rem 0.875rem;
+	@media (min-width: 48rem) {
+		main {
+			padding-block: 4.5rem 6rem;
 		}
-		.site-header nav {
-			font-size: 0.9375rem;
+	}
+	/* Keep the three nav links on one line next to the monogram on a 390px phone. */
+	@media (max-width: 30rem) {
+		.site-header nav a {
+			padding-inline: 0.5rem;
+			font-size: 0.8125rem;
 		}
 	}
 </style>

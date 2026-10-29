@@ -9,7 +9,7 @@ import { url } from '../lib/url';
 	description="An interactive walk-through of a cross-instance reconciliation proof of concept: fingerprint, classify drift both ways, drill down to the keys."
 >
 	<article>
-		<p class="eyebrow mono">Proof of concept · cross-instance reconciliation</p>
+		<p class="eyebrow">Proof of concept · cross-instance reconciliation</p>
 		<h1>Finding data that didn't arrive</h1>
 		<p class="lede">
 			Replication rarely fails loudly. A row goes missing, or a delete never lands, and every system still looks healthy. This
@@ -36,49 +36,43 @@ import { url } from '../lib/url';
 			key landed but whose values didn't would pass; catching that needs a value hash too.
 		</p>
 
-		<p class="back mono"><a href={url('projects/')}>← Projects</a> · <a href={url()}>The pipeline</a></p>
+		<p class="back"><a class="btn press" href={url('projects/')}>← Projects</a> <a class="btn press" href={url()}>The pipeline</a></p>
 	</article>
 </Base>
 
 <style>
-	.eyebrow {
-		margin: 0;
-		color: var(--line);
-		font-size: 0.8125rem;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-	}
 	h1 {
 		max-width: var(--measure);
-		margin-block: 0.5rem 1rem;
-		font-size: clamp(1.75rem, 5vw, 2.75rem);
+		margin-block: 0.75rem 1.25rem;
 	}
-	.lede {
+	p,
+	.found {
 		max-width: var(--measure);
-		font-size: 1.1875rem;
 	}
 	.note {
-		max-width: var(--measure);
-		margin-bottom: 2rem;
+		margin-bottom: 3rem;
 		color: var(--muted);
 	}
 	h2 {
-		margin-block: 2.5rem 0.75rem;
-		font-size: 1.375rem;
+		margin-block: 3.5rem 1rem;
 	}
 	.found {
-		max-width: var(--measure);
 		padding-left: 1.25rem;
 	}
+	.found li + li {
+		margin-top: 0.4rem;
+	}
 	.limit {
-		max-width: var(--measure);
 		margin: 1.5rem 0 0;
-		padding: 0.5rem 0.75rem;
-		border-left: 3px solid var(--error);
+		padding: 0.875rem 1.125rem;
+		border-radius: var(--radius);
 		background: var(--error-bg);
+		box-shadow: inset 3px 0 0 var(--error);
 	}
 	.back {
-		margin-top: 3rem;
-		font-size: 0.875rem;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.625rem;
+		margin-top: 3.5rem;
 	}
 </style>
