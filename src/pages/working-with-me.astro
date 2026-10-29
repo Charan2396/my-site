@@ -76,15 +76,9 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 		title: 'How I raise the bar',
 		caption: 'team and codebase',
 		claims: [
-			{ label: 'standards', text: 'I set the 2025 platform roadmap and the pull-request standard.' },
 			{
 				label: 'source control',
 				text: 'I introduced source control to a previously unversioned Java replication codebase, and upgraded splitter logging from Log4j 1.x to 2.x.',
-			},
-			{ label: 'people', text: 'I mentored engineers and sat on an Oracle DBA hiring panel.' },
-			{
-				label: 'security',
-				text: 'I drove a middleware vulnerability backlog (Log4j, IBM MQ, IBM Java, Oracle client) toward zero.',
 			},
 			{
 				label: 'less code, faster',
@@ -100,18 +94,25 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 				label: 'sharing the plan',
 				text: 'I profiled a TIBCO EMS estate of 5,000+ queues, wrote the EMS-to-MQ migration architecture, sandbox and onboarding program, and presented it to a 65-invitee audience.',
 			},
+			{
+				label: 'also on my plate',
+				text: 'I set the 2025 platform roadmap and the pull-request standard, mentored engineers and sat on an Oracle DBA hiring panel, and drove a middleware vulnerability backlog (Log4j, IBM MQ, IBM Java, Oracle client) toward zero.',
+			},
 		],
 	},
 ];
 
 // Concepts, not claimed experience: left = work named in content/resume.md, right = the general idea and where it shows up.
 const mapping = [
-	['Mainframe CDC (IMS, Db2, VSAM)', 'Log-based change data capture (the same job Debezium does for Postgres or MySQL)'],
+	['Mainframe CDC (IMS, Db2, VSAM)', 'Change data capture from the source (the job Debezium does for Postgres or MySQL)'],
 	['IBM MQ store-and-forward, message ordering', 'Durable queues and ordered delivery (queues in MQ, partitions in Kafka)'],
 	['MERGE apply into Oracle, idempotent backfills', 'Idempotent upserts into a target store'],
 	['Cross-instance fingerprinting and drift classification', 'Data reconciliation / data-quality checks'],
 	['Self-healing key replay', 'Replay from source of truth'],
-	['Java broker to Pub/Sub, consumed into BigQuery', 'Streaming into a cloud warehouse (direct experience)'],
+	[
+		'Java broker to Pub/Sub, consumed into BigQuery',
+		'Publishing a change stream to cloud consumers (I co-built the publishing side; downstream teams load AlloyDB and BigQuery)',
+	],
 ];
 
 // Intent, not results: each item names the habit above it comes from.

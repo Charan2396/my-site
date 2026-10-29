@@ -49,6 +49,7 @@ Moved up from "Follow a record": this is what makes the site more than the resum
   and all five stages have a story (VERIFY figures published as they are, per the v2 "go live first" decision).
 - Shipped 2026-10-28: v2 phases 3 and 5 (Working with me page, home impact strip, reconciliation and Simple Dynamo explainers).
 - Shipped 2026-10-28: v2 phases 4 and 6 (page transitions and pipeline motion; Lighthouse 100s, Playwright e2e suite in `tests/e2e`, run with `npm run test:e2e`).
+- 2026-10-29: second review round shipped (hero positioning, career strip, fig. 1/2 accuracy, explainer limits, projects reorder).
 
 ## 7. Build log page
 - Backfill entries from the setup session: brief → CLAUDE.md → GitHub dig → this plan.

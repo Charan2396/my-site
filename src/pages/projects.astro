@@ -9,50 +9,68 @@ const explainers: Record<string, { href: string; text: string }> = {
 	'simple-dynamo': { href: 'projects/simple-dynamo/', text: 'Try the interactive ring' },
 	reconciliation: { href: 'reconciliation/', text: 'See how it finds drift: the interactive explainer' },
 };
+// A project with no Markdown body renders as a one-line entry (title, summary, repo link).
 const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (await render(p)).Content })));
 ---
 
-<Base title="Projects" description="A reconciliation proof of concept from my day job, this site, and graduate coursework.">
+<Base title="Projects" description="A reconciliation proof of concept from my day job, graduate coursework, and this site.">
 	<h1>Projects</h1>
 	<p class="lede">
-		A proof of concept I built on the production platform I run, then this site, then graduate coursework from the University
-		at Buffalo. Each one is described only by what it does.
+		A proof of concept I built on the production platform I run, then graduate coursework from the University at Buffalo, then
+		this site. Each one is described only by what it does.
 	</p>
 
 	<ol class="projects">
 		{
-			rendered.map(({ p, Content }, i) => (
-				<li>
-					<article class="card" aria-labelledby={`project-${p.id}`}>
-						<p class="caption mono">
-							fig. {i + 1} · {p.data.label}
-						</p>
-						<h2 id={`project-${p.id}`}>{p.data.title}</h2>
-						<p class="summary">{p.data.summary}</p>
-						<div class="prose">
-							<Content />
-						</div>
-						{explainers[p.id] && (
-							<p class="code mono">
-								<a href={url(explainers[p.id].href)}>{explainers[p.id].text} →</a>
+			rendered.map(({ p, Content }, i) =>
+				p.body?.trim() ? (
+					<li>
+						<article class="card" aria-labelledby={`project-${p.id}`}>
+							<p class="caption mono">
+								fig. {i + 1} · {p.data.label}
 							</p>
-						)}
-						{p.data.link && (
-							<p class="code mono">
-								<a href={p.data.link}>
-									Code on GitHub<span class="sr-only">: {p.data.title}</span> →
-								</a>
+							<h2 id={`project-${p.id}`}>{p.data.title}</h2>
+							<p class="summary">{p.data.summary}</p>
+							<div class="prose">
+								<Content />
+							</div>
+							{explainers[p.id] && (
+								<p class="code mono">
+									<a href={url(explainers[p.id].href)}>{explainers[p.id].text} →</a>
+								</p>
+							)}
+							{p.data.link && (
+								<p class="code mono">
+									<a href={p.data.link}>
+										Code on GitHub<span class="sr-only">: {p.data.title}</span> →
+									</a>
+								</p>
+							)}
+						</article>
+					</li>
+				) : (
+					<li>
+						<article class="card slim" aria-labelledby={`project-${p.id}`}>
+							<h2 id={`project-${p.id}`}>{p.data.title}</h2>
+							<p>
+								{p.data.summary}{' '}
+								{p.data.link && (
+									<a class="mono" href={p.data.link}>
+										Code on GitHub<span class="sr-only">: {p.data.title}</span> →
+									</a>
+								)}
 							</p>
-						)}
-					</article>
-				</li>
-			))
+						</article>
+					</li>
+				),
+			)
 		}
 	</ol>
 
 	<p class="also">
-		<span class="mono">Also from grad school</span> Machine learning coursework (CSE 674 and Pattern Recognition, 2019):
-		probabilistic graphical models, explainable AI, neural networks and generative models.
+		<span class="mono">Also from grad school</span> Solr search and IR ranking evaluation (BM25, DFR, VSM)
+		(<a href="https://github.com/Charan2396/Twitter-Search">code on GitHub</a>); ML coursework (CSE 674 and Pattern
+		Recognition, 2019): probabilistic graphical models, explainable AI, neural networks and generative models.
 	</p>
 </Base>
 
@@ -123,6 +141,23 @@ const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (awa
 		font-size: 0.75rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
+	}
+	.slim {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0 1rem;
+		padding-block: 0.75rem;
+	}
+	.slim h2 {
+		margin: 0;
+		font-size: 1.125rem;
+	}
+	.slim p {
+		margin: 0;
+	}
+	.slim a {
+		font-size: 0.875rem;
 	}
 	@media (max-width: 40rem) {
 		.card {

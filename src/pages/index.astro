@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Pipeline from '../components/Pipeline.astro';
 import ImpactStrip from '../components/ImpactStrip.astro';
+import CareerStrip from '../components/CareerStrip.astro';
 import { getStories } from '../lib/stories';
 import { stages } from '../lib/stages';
 import { url } from '../lib/url';
@@ -21,11 +22,14 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 		<li><a href={url('resume/')}>Resume</a></li>
 	</ul>
 	<p class="lede">
-		I keep mainframe change data flowing through IBM MQ and Java services into Oracle and on to Google Cloud Pub/Sub, with
-		a focus on reliability, data correctness and automation. Each stage below opens a story about real work I did there.
+		I own correctness for a real-time change-data-capture backbone: mainframe changes flow through IBM MQ and Java services
+		into Oracle, and out to Google Cloud Pub/Sub for cloud consumers. I can find the one bad message among tens of thousands
+		of rejects, prove which rows didn't land, and repair them by replaying from the source instead of patching the copy. Each
+		stage below opens a story about real work I did there.
 	</p>
 
 	<ImpactStrip />
+	<CareerStrip />
 
 	<h2 class="tagline">The pipeline is the portfolio.</h2>
 	<Pipeline storyByStage={storyByStage} />
@@ -39,7 +43,6 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 						<li>
 							<a href={url(`stories/${s.id}/`)}>{s.data.title}</a>
 							<span class="mono stage-tag">{stageLabel(s.data.stage)}</span>
-							<p>{s.data.summary}</p>
 						</li>
 					))}
 				</ul>
@@ -115,7 +118,7 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 	}
 	.stories {
 		display: grid;
-		gap: 1.5rem;
+		gap: 0.75rem;
 		max-width: var(--measure);
 		padding: 0;
 		list-style: none;
@@ -130,8 +133,5 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 		font-size: 0.75rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-	}
-	.stories p {
-		margin: 0.25rem 0 0;
 	}
 </style>

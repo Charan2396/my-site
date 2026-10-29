@@ -35,12 +35,12 @@ const dates = await p.$$eval('.log time', (ts) => ts.map((t) => t.getAttribute('
 const ids = await p.$$eval('.log h2', (hs) => hs.map((h) => h.id));
 ok(dates.every((d, i) => i === 0 || d <= dates[i - 1]), `build log dates desc: ${dates.join(',')}`);
 ok(ids.every((d, i) => i === 0 || dates[i] !== dates[i - 1] || d < ids[i - 1]), `same-date ids desc: ${ids.join(',')}`);
-ok(ids[0].includes('2026-10-28-'), `newest first: ${ids[0]}`);
+ok(ids[0].includes('2026-10-29-'), `newest first: ${ids[0]}`);
 await p.goto(base + 'projects/');
 const links = await p.$$eval('.card a', (as) => as.map((a) => a.getAttribute('href')));
-ok(links.length === 6, `project links (3 GitHub + 2 explainers + build log): ${links.join(' ')}`);
+ok(links.length === 4, `project links (2 GitHub + 2 explainers): ${links.join(' ')}`);
 const order = await p.$$eval('.card h2', (h) => h.map((x) => x.id));
-ok(order.join('|') === 'project-reconciliation|project-this-site|project-simple-dynamo|project-twitter-search-ir', `project order: ${order}`);
+ok(order.join('|') === 'project-reconciliation|project-simple-dynamo|project-this-site', `project order: ${order}`);
 ok((await p.textContent('.card .caption')).includes('Proof of concept'), 'first card labelled proof of concept');
 ok((await p.textContent('.also')).includes('Also from grad school'), 'ML coursework folded into one note');
 await p.goto(base + 'stories/backfill-16900/');

@@ -17,7 +17,10 @@ const sourceStory = storyHref('source');
 
 <div class="record-view" data-record-view>
 	<figure class="pipeline">
-		<figcaption class="mono">fig. 1 · one record's path through the platform</figcaption>
+		<figcaption class="mono">
+			fig. 1 · one record's path through the platform · ■ 4471/2 = the order line you're following ·
+			simplified: the Pub/Sub broker reads the same mainframe change stream as the splitter
+		</figcaption>
 		<ol>
 			{
 				stages.map((s, i) => {
@@ -66,7 +69,8 @@ const sourceStory = storyHref('source');
 
 	<figure class="records">
 		<figcaption class="mono">
-			fig. 2 · the same order line at each stage · <mark>highlight</mark> = the changed field (qty 2 → 3)
+			fig. 2 · the same order line at each stage · <mark>highlight</mark> = the changed field (qty 2 → 3) · Illustrative
+			data. Every byte checks: try decoding the base64.
 		</figcaption>
 		<div class="controls" data-controls hidden>
 			<button type="button" data-step="-1" aria-label="Previous stage">← Prev</button>
@@ -947,6 +951,47 @@ const sourceStory = storyHref('source');
 		}
 		.format {
 			margin-left: 0;
+		}
+	}
+	/* phones: compact boxes (number, label, system on one line; no detail) so the stories come sooner */
+	@media (max-width: 40rem) {
+		.pipeline ol {
+			gap: 1rem;
+		}
+		.stage {
+			flex-direction: row;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0.25rem 0.625rem;
+			padding: 0.5rem 0.75rem;
+		}
+		.label {
+			margin-top: 0;
+		}
+		.detail {
+			display: none;
+		}
+		.cta,
+		.flag {
+			margin: 0 0 0 auto;
+			padding-top: 0;
+		}
+		/* keep the story link a 24px+ touch target */
+		.cta {
+			padding-block: 0.375rem;
+		}
+		.pipeline li:not(:last-child)::after {
+			left: 1.625rem;
+			height: 1rem;
+		}
+		.pipeline li:not(:last-child)::before {
+			top: calc(100% + 1rem - 8px);
+			left: calc(1.625rem - 4px);
+		}
+	}
+	@media (max-width: 40rem) and (prefers-reduced-motion: no-preference) {
+		.is-stepper .packet {
+			left: calc(1.625rem - 2px);
 		}
 	}
 </style>

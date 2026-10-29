@@ -28,8 +28,13 @@ import { url } from '../lib/url';
 		<h2>What it found for real</h2>
 		<ul class="found">
 			<li>It caught a flawed key heuristic before that heuristic produced false drift.</li>
-			<li>It surfaced stale rows left behind by deletes that never propagated, like step 4 above.</li>
+			<li>It surfaced stale rows left behind by deletes that never propagated: rows still in a target after the source deleted them.</li>
 		</ul>
+
+		<p class="limit">
+			<strong>Honest limit:</strong> Fingerprints cover row counts and key hashes, so they find missing and stale rows. A row whose
+			key landed but whose values didn't would pass; catching that needs a value hash too.
+		</p>
 
 		<p class="back mono"><a href={url('projects/')}>← Projects</a> · <a href={url()}>The pipeline</a></p>
 	</article>
@@ -64,6 +69,13 @@ import { url } from '../lib/url';
 	.found {
 		max-width: var(--measure);
 		padding-left: 1.25rem;
+	}
+	.limit {
+		max-width: var(--measure);
+		margin: 1.5rem 0 0;
+		padding: 0.5rem 0.75rem;
+		border-left: 3px solid var(--error);
+		background: var(--error-bg);
 	}
 	.back {
 		margin-top: 3rem;

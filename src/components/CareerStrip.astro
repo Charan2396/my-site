@@ -1,0 +1,91 @@
+---
+// Every phrase restates content/resume.md (Experience and Education). Dates are the resume's.
+import { url } from '../lib/url';
+const rows = [
+	{
+		when: '2020–21',
+		org: 'Amazon',
+		role: 'Software Development Engineer',
+		what: 'Java backend microservices for Amazon Retail Mobile (over 10 million daily active users); migrated legacy services to AWS-native infrastructure with zero downtime.',
+	},
+	{
+		when: '2021–22',
+		org: 'Bizanalytica',
+		role: 'Software Engineer',
+		what: 'data-lake infrastructure on Snowflake; automated Python ingestion for JSON and XML feeds.',
+	},
+	{
+		when: '2022–now',
+		org: 'Ingram Micro',
+		role: 'Replication Engineer → Data Platform Engineer → Senior Data Platform Engineer',
+		what: 'the platform below.',
+	},
+];
+---
+
+<section class="career" aria-labelledby="career-heading">
+	<h2 id="career-heading" class="mono">Before this · how I got here</h2>
+	<ol>
+		{
+			rows.map((r) => (
+				<li>
+					<span class="when mono">{r.when}</span>
+					<span>
+						<strong>{r.org}</strong> · {r.role} — {r.what}
+					</span>
+				</li>
+			))
+		}
+	</ol>
+	<p class="foot mono">
+		M.S. Computer Science and Engineering, University at Buffalo{' · '}
+		<a href={url('projects/simple-dynamo/')}>Simple Dynamo ring →</a>{' · '}
+		<a href={url('resume/')}>Full history on the resume →</a>
+	</p>
+</section>
+
+<style>
+	.career {
+		margin-bottom: 3rem;
+	}
+	h2 {
+		margin: 0 0 0.75rem;
+		color: var(--muted);
+		font-size: 0.8125rem;
+		font-weight: 400;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	ol {
+		display: grid;
+		gap: 0.5rem;
+		max-width: 64rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.9375rem;
+	}
+	li {
+		display: grid;
+		grid-template-columns: 6rem 1fr;
+		gap: 0 1rem;
+		padding-left: 0.75rem;
+		border-left: 2px solid var(--line);
+	}
+	.when {
+		color: var(--line);
+		font-size: 0.8125rem;
+		line-height: 1.8;
+	}
+	.foot {
+		margin: 0.75rem 0 0;
+		color: var(--muted);
+		font-size: 0.8125rem;
+		line-height: 1.7;
+	}
+	@media (max-width: 40rem) {
+		li {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
