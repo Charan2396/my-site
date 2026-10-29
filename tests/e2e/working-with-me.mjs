@@ -66,7 +66,7 @@ ok(JSON.stringify(await vals(p)) === JSON.stringify(FINAL), `JS on, after 400ms:
 ok((await p.textContent('.impact .stack')).includes('Airflow (in progress)'), 'stack row present, Airflow marked in progress');
 // hero
 ok((await p.textContent('h1')) === 'Sricharan Anand', 'hero h1 is the name');
-ok((await p.textContent('.subtitle')) === 'Senior Data Platform Engineer · 6+ years · ex-Amazon · San Jose, CA', 'hero subtitle');
+ok((await p.textContent('.subtitle')) === 'Senior Data Platform Engineer · 6+ years · ex-Amazon · Irvine, CA', 'hero subtitle');
 const hero = await p.$$eval('main .contact a', (as) => as.map((a) => `${a.textContent}=${a.getAttribute('href')}`));
 ok(hero.join(' ') === 'Email=mailto:sricharan23@gmail.com LinkedIn=https://linkedin.com/in/charansri Resume=/my-site/resume/', `hero contact links: ${hero}`);
 ok((await p.textContent('h2.tagline')) === 'The pipeline is the portfolio.', 'tagline above fig. 1');

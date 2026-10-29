@@ -2,7 +2,7 @@
 
 **Senior Data Platform Engineer** — real-time data replication, enterprise messaging and data reconciliation
 
-San Jose, CA · [sricharan23@gmail.com](mailto:sricharan23@gmail.com) · [LinkedIn](https://linkedin.com/in/charansri) · [GitHub](https://github.com/Charan2396)
+Irvine, CA · [sricharan23@gmail.com](mailto:sricharan23@gmail.com) · [LinkedIn](https://linkedin.com/in/charansri) · [GitHub](https://github.com/Charan2396)
 
 ## Summary
 

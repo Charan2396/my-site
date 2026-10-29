@@ -40,7 +40,7 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 		<a class="skip-link" href="#main">Skip to content</a>
 		<header class="site-header">
 			<div class="wrap bar">
-				<a class="brand mono" href={url()}>{name}</a>
+				<a class="brand mono" href={url()} aria-label={`${name}, home`}>SA</a>
 				{nav.length > 0 && (
 					<nav aria-label="Main">
 						<ul>
@@ -110,11 +110,22 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 		padding: 0;
 		list-style: none;
 	}
+	/* monogram, so the name isn't repeated next to page h1s */
 	.brand {
-		color: var(--ink);
+		display: grid;
+		place-items: center;
+		min-width: 2.25rem;
+		height: 2.25rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		color: var(--line);
 		font-weight: 600;
 		text-decoration: none;
-		letter-spacing: 0.02em;
+		letter-spacing: 0.04em;
+	}
+	.brand:hover {
+		background: var(--line);
+		color: var(--surface);
 	}
 	.site-header nav a {
 		color: var(--ink);
