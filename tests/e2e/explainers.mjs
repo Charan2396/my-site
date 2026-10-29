@@ -21,6 +21,7 @@ const rExp = [
 ];
 const rTitles = await R.locator('[data-step-item] h3').allTextContents();
 ok(await R.locator('[data-controls]').isVisible(), 'recon controls shown with JS');
+ok(await R.locator('[data-go="-1"]').isDisabled() && !(await R.locator('[data-go="1"]').isDisabled()), 'recon step 1: Prev disabled, Next enabled');
 for (let i = 0; i < rExp.length; i++) {
   if (i > 0 && i < 4) await R.locator('[data-go="1"]').click();
   else if (i >= 4) { await R.locator('[data-go="1"]').focus(); await p.keyboard.press('ArrowRight'); }
@@ -30,8 +31,10 @@ for (let i = 0; i < rExp.length; i++) {
   if (i > 0) ok(s.live === `Step ${i + 1} of 6: ${rTitles[i]}`, `recon live: "${s.live}"`);
   ok(s.count === `${i + 1} / 6`, `recon count ${s.count}`);
 }
+ok(await R.locator('[data-go="1"]').isDisabled(), 'recon Next disabled on last step');
+ok(await p.evaluate(() => document.activeElement?.dataset.go === '-1'), 'recon focus moved from disabled Next to Prev');
 await p.keyboard.press('ArrowRight');
-ok((await rState()).count === '6 / 6', 'recon clamps at last step');
+ok((await rState()).count === '6 / 6', 'recon ArrowRight stays on last step');
 await p.keyboard.press('ArrowLeft');
 ok((await rState()).live.startsWith('Step 5 of 6'), 'recon ArrowLeft goes back');
 
@@ -64,6 +67,7 @@ for (const [id, e] of Object.entries(dExp)) {
     const name = `Scenario ${id.toUpperCase()}`;
     if (i > 0) ok(s.live === `${name}, step ${i + 1} of ${e.lit.length}: ${titles[i]}`, `live: "${s.live}"`);
   }
+  ok(await root.locator('[data-go="1"]').isDisabled() && !(await root.locator('[data-go="-1"]').isDisabled()), `scenario ${id}: Next disabled on last step`);
 }
 
 // --- no JS ---

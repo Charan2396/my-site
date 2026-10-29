@@ -14,7 +14,13 @@ const t4 = await tf(p);
 ok(t1 !== t4, `token moves stage 1 -> 4: ${t1} -> ${t4}`);
 ok((await p.getAttribute('[data-token]', 'aria-hidden')) === 'true', 'token aria-hidden');
 await p.click('[data-pick="0"]');
+ok((await p.textContent('[data-replay]')) === 'Watch one bad message break the pipeline (7 steps)', 'replay button label');
+ok(await p.isVisible('.incident .intro'), 'plain sentence above the replay button');
+const startColor = await p.$eval('[data-replay]', (e) => getComputedStyle(e).borderColor);
+const lineColor = await p.evaluate(() => { const d = document.createElement('i'); d.style.color = 'var(--line)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; });
+ok(startColor === lineColor, `replay button uses --line, not error red: ${startColor}`);
 await p.click('[data-replay]');
+ok(await p.isDisabled('[data-istep="-1"]') && !(await p.isDisabled('[data-istep="1"]')), 'step 1: Prev disabled, Next enabled');
 ok((await shownStep(p)) === 1 && (await p.textContent('[data-live]')).startsWith('Incident step 1 of 7'), `replay step 1: "${await p.textContent('[data-live]')}"`);
 ok(await p.isVisible('.steps mark'), 'step 1 shows corrupt sample with marked breaks');
 for (let n = 2; n <= 7; n++) {
@@ -22,9 +28,17 @@ for (let n = 2; n <= 7; n++) {
   const live = await p.textContent('[data-live]');
   ok((await shownStep(p)) === n && live.startsWith(`Incident step ${n} of 7`), `step ${n} via ${n % 2 ? 'ArrowRight' : 'Next'}: "${live}"`);
   if (n === 3) ok(await err3(p), 'stage 3 error state on step 3');
-  if (n === 6) ok(!(await err3(p)), 'stage 3 error cleared on step 6');
+  if (n === 6) {
+    ok(!(await err3(p)), 'stage 3 error cleared on step 6');
+    const bar = await p.$eval('[data-step-item]:not([hidden]) .backlog .bar', (e) => getComputedStyle(e).borderColor);
+    ok(bar === lineColor, `draining backlog bar uses --line: ${bar}`);
+  }
 }
 ok(await p.isVisible('.steps a[href$="/stories/one-bad-message/"]'), 'step 7 links the story');
+ok(await p.isDisabled('[data-istep="1"]'), 'step 7: Next disabled');
+ok(await p.evaluate(() => document.activeElement?.dataset.istep === '-1'), 'focus moved from disabled Next to Prev');
+await p.keyboard.press('ArrowRight');
+ok((await shownStep(p)) === 7, 'ArrowRight on last step stays on step 7');
 await p.click('[data-exit]');
 ok((await p.isHidden('[data-steps]')) && (await p.isVisible('[data-replay]')) && !(await err3(p)) && (await p.textContent('[data-live]')).includes('Replay closed'), 'Exit returns to normal view');
 ok(await p.evaluate(() => document.querySelectorAll('[data-version]:not([hidden])').length === 1), 'record view still one version');

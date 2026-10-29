@@ -12,7 +12,12 @@ ok(r.status() === 200, `/working-with-me/ ${r.status()}`);
 const cur = await p.$$eval('nav a[aria-current="page"]', (as) => as.map((a) => a.textContent.trim()));
 ok(cur.length === 1 && cur[0] === 'Working with me', `aria-current [${cur}]`);
 const nav = await p.$$eval('nav[aria-label="Main"] a', (as) => as.map((a) => a.textContent.trim()));
-ok(nav.join('|') === 'Working with me|Projects|Build log|Resume', `nav order ${nav}`);
+ok(nav.join('|') === 'Working with me|Projects|Resume', `nav order ${nav}`);
+ok(!(await p.content()).includes('Every claim below comes from'), 'no meta "every claim" sentence');
+const map = await p.$$eval('#other-names ~ table tbody tr', (r) => r.map((x) => x.querySelector('th').textContent.trim()));
+ok(map.length === 6 && map[0].startsWith('Mainframe CDC'), `mapping table: ${map.length} rows`);
+ok((await p.textContent('#other-names')) === 'If your stack looks different', 'mapping heading');
+ok(await p.locator('.claims a[href="/my-site/reconciliation/"]').count() === 1, 'reconciliation card links the explainer');
 ok((await p.$$('h1')).length === 1, 'one h1');
 ok((await p.$$('#testimonials')).length === 0, 'no testimonials section without file');
 const links = [...new Set(await p.$$eval('main a[href]', (as) => as.map((a) => a.href)))];
@@ -27,7 +32,7 @@ ok(links.includes('mailto:sricharan23@gmail.com') && links.includes('https://lin
 await p.close();
 
 // overflow
-for (const [w, h, scheme] of [[1280, 900, 'light'], [1280, 900, 'dark'], [390, 844, 'light'], [390, 844, 'dark']]) {
+for (const [w, h, scheme] of [[1280, 900, 'light'], [1280, 900, 'dark'], [820, 1000, 'light'], [820, 1000, 'dark'], [390, 844, 'light'], [390, 844, 'dark']]) {
   const q = await b.newPage({ viewport: { width: w, height: h }, colorScheme: scheme });
   for (const path of ['working-with-me/', '']) {
     await q.goto(base + path);
@@ -54,21 +59,25 @@ ok(JSON.stringify(await vals(p)) === JSON.stringify(FINAL), `reduced motion fina
 ok(await p.$$eval('.impact [data-counted]', (e) => e.length) === 0, 'reduced motion: no counting');
 await c.close();
 c = await b.newContext({ viewport: { width: 1280, height: 900 } }); p = await c.newPage(); await p.goto(base);
-await p.waitForTimeout(120);
-const mid = await vals(p);
-console.log('  mid-count values:', mid);
-ok(JSON.stringify(mid) !== JSON.stringify(FINAL), 'values animating shortly after load');
-await p.waitForTimeout(1200);
-ok(JSON.stringify(await vals(p)) === JSON.stringify(FINAL), `JS count-up reaches final ${await vals(p)}`);
-ok(await p.$$eval('.impact [data-counted]', (e) => e.length) === 4, 'all 4 marked data-counted');
-// below the fold at 390: count starts only on scroll
-await c.close();
-c = await b.newContext({ viewport: { width: 390, height: 300 } }); p = await c.newPage(); await p.goto(base);
-await p.waitForTimeout(1200);
-const last = (await vals(p))[3];
-await p.evaluate(() => document.querySelectorAll('.impact li')[3].scrollIntoView());
-await p.waitForTimeout(1200);
-ok(JSON.stringify(await vals(p)) === JSON.stringify(FINAL), `after scroll final ${await vals(p)} (offscreen tile before scroll: ${last})`);
+// static values (the count-up is gone): right at load, after a wait, and in an offscreen tile
+ok(JSON.stringify(await vals(p)) === JSON.stringify(FINAL), `JS on, at load: ${await vals(p)}`);
+await p.waitForTimeout(400);
+ok(JSON.stringify(await vals(p)) === JSON.stringify(FINAL), `JS on, after 400ms: ${await vals(p)}`);
+ok((await p.textContent('.impact .stack')).includes('Airflow (in progress)'), 'stack row present, Airflow marked in progress');
+// hero
+ok((await p.textContent('h1')) === 'Sricharan Anand', 'hero h1 is the name');
+ok((await p.textContent('.subtitle')) === 'Senior Data Platform Engineer · 6+ years · ex-Amazon · San Jose, CA', 'hero subtitle');
+const hero = await p.$$eval('main .contact a', (as) => as.map((a) => `${a.textContent}=${a.getAttribute('href')}`));
+ok(hero.join(' ') === 'Email=mailto:sricharan23@gmail.com LinkedIn=https://linkedin.com/in/charansri Resume=/my-site/resume/', `hero contact links: ${hero}`);
+ok((await p.textContent('h2.tagline')) === 'The pipeline is the portfolio.', 'tagline above fig. 1');
+const more = await p.$$eval('.more a', (as) => as.map((a) => a.getAttribute('href')));
+ok(more.join(' ') === '/my-site/reconciliation/ /my-site/projects/simple-dynamo/', `more to explore: ${more}`);
+// impact grid: 2 x 2 at 820, 4 across at 1280
+for (const [w, cols] of [[820, 2], [1280, 4]]) {
+  await p.setViewportSize({ width: w, height: 900 });
+  const tops = await p.$$eval('.impact li', (l) => l.map((x) => Math.round(x.getBoundingClientRect().top)));
+  ok(new Set(tops).size === 4 / cols, `impact grid at ${w}: ${4 / cols} row(s) (${tops})`);
+}
 await c.close();
 await b.close();
 console.log(fails ? `${fails} FAIL` : 'ALL PASS');

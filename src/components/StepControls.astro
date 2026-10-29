@@ -34,8 +34,13 @@ const { total } = Astro.props;
 		font: 0.8125rem var(--font-mono);
 		cursor: pointer;
 	}
-	button:hover {
+	button:hover:not(:disabled) {
 		background: color-mix(in srgb, var(--line) 9%, var(--surface));
+	}
+	button:disabled {
+		border-color: var(--rule);
+		color: var(--muted);
+		cursor: default;
 	}
 	span {
 		color: var(--muted);

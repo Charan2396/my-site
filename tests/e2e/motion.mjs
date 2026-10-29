@@ -160,7 +160,7 @@ await s.close();
 // (f) overflow on all pages
 const slugs = readdirSync(DIST + 'stories');
 const pages = ['', 'working-with-me/', 'projects/', 'projects/simple-dynamo/', 'reconciliation/', 'build-log/', 'resume/', ...slugs.map((x) => `stories/${x}/`)];
-for (const [w, scheme] of [[390, 'light'], [390, 'dark'], [1280, 'light'], [1280, 'dark']]) {
+for (const [w, scheme] of [[390, 'light'], [390, 'dark'], [820, 'light'], [820, 'dark'], [1280, 'light'], [1280, 'dark']]) {
   const q = await b.newPage({ viewport: { width: w, height: 900 }, colorScheme: scheme });
   const bad = [];
   for (const pg of pages) {

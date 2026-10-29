@@ -11,11 +11,18 @@ export function initSteppers(signal?: AbortSignal) {
 		const count = root.querySelector<HTMLElement>('[data-count]')!;
 		const live = root.querySelector<HTMLElement>('[data-live]')!;
 		const prefix = root.dataset.stepper ? `${root.dataset.stepper}, step` : 'Step';
+		const prev = controls.querySelector<HTMLButtonElement>('[data-go="-1"]')!;
+		const next = controls.querySelector<HTMLButtonElement>('[data-go="1"]')!;
 		let step = 0;
 		const go = (n: number, announce = true) => {
 			step = Math.max(0, Math.min(steps.length - 1, n));
 			steps.forEach((s, j) => (s.hidden = j !== step));
 			count.textContent = `${step + 1} / ${steps.length}`;
+			// no wrap at the ends; a button that loses its use hands focus to the other one
+			const f = document.activeElement;
+			prev.disabled = step === 0;
+			next.disabled = step === steps.length - 1;
+			if ((f === prev || f === next) && f.disabled) (f === prev ? next : prev).focus();
 			if (announce) live.textContent = `${prefix} ${step + 1} of ${steps.length}: ${steps[step].querySelector('h3')!.textContent}`;
 		};
 		root.classList.add('is-stepper');

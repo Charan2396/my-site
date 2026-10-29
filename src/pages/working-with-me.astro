@@ -6,7 +6,7 @@ import { getStories } from '../lib/stories';
 import { url } from '../lib/url';
 
 // Every claim restates a bullet in content/resume.md; `story` links the claim to its evidence.
-type Claim = { label: string; text: string; story?: string };
+type Claim = { label: string; text: string; story?: string; explainer?: { href: string; text: string } };
 const sections: { id: string; title: string; caption: string; claims: Claim[] }[] = [
 	{
 		id: 'keep-up',
@@ -63,6 +63,7 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 			{
 				label: 'reconciliation',
 				text: 'As a proof of concept, I built a read-only engine that fingerprints each table and company code and classifies drift in both directions across three Oracle instances. It caught a flawed key heuristic before it produced false drift.',
+				explainer: { href: 'reconciliation/', text: 'Interactive explainer: how reconciliation finds drift' },
 			},
 			{
 				label: 'cutovers',
@@ -103,6 +104,16 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 	},
 ];
 
+// Concepts, not claimed experience: left = work named in content/resume.md, right = the general idea and where it shows up.
+const mapping = [
+	['Mainframe CDC (IMS, Db2, VSAM)', 'Log-based change data capture (the same job Debezium does for Postgres or MySQL)'],
+	['IBM MQ store-and-forward, message ordering', 'Durable queues and ordered delivery (queues in MQ, partitions in Kafka)'],
+	['MERGE apply into Oracle, idempotent backfills', 'Idempotent upserts into a target store'],
+	['Cross-instance fingerprinting and drift classification', 'Data reconciliation / data-quality checks'],
+	['Self-healing key replay', 'Replay from source of truth'],
+	['Java broker to Pub/Sub, consumed into BigQuery', 'Streaming into a cloud warehouse (direct experience)'],
+];
+
 // Intent, not results: each item names the habit above it comes from.
 const firstNinety = [
 	{ text: 'Learn your pipeline end to end and write down what I find, so the next person starts with a map.', from: 'keep-up', habit: 'the DR playbook and runbooks' },
@@ -121,8 +132,7 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 	<p class="eyebrow mono">Working with me</p>
 	<h1>How I'd contribute to your team</h1>
 	<p class="lede">
-		Every claim below comes from my <a href={url('resume/')}>resume</a>. Where I've written up the work as a story, the line
-		links to it, so this page doubles as an index into the evidence.
+		Where I've written up the work as a story, the line links to it, so this page doubles as an index into the evidence.
 	</p>
 
 	{
@@ -137,6 +147,11 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 						<li class="card">
 							<p class="label mono">{c.label}</p>
 							<p>{c.text}</p>
+							{c.explainer && (
+								<p class="story mono">
+									<a href={url(c.explainer.href)}>{c.explainer.text} →</a>
+								</p>
+							)}
 							{c.story && titles.has(c.story) && (
 								<p class="story mono">
 									<a href={url(`stories/${c.story}/`)}>
@@ -152,8 +167,32 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 		))
 	}
 
+	<section aria-labelledby="other-names">
+		<p class="caption mono">fig. {sections.length + 1} · concepts, not claimed experience</p>
+		<h2 id="other-names">If your stack looks different</h2>
+		<p class="note">The tools differ; the problems are the same. Here is how my work maps onto common concepts.</p>
+		<table class="map card">
+			<thead>
+				<tr>
+					<th scope="col">What I work with</th>
+					<th scope="col">The concept, and where else it shows up</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					mapping.map(([mine, concept]) => (
+						<tr>
+							<th scope="row">{mine}</th>
+							<td>{concept}</td>
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+	</section>
+
 	<section aria-labelledby="first-90">
-		<p class="caption mono">fig. {sections.length + 1} · intent, not a track record</p>
+		<p class="caption mono">fig. {sections.length + 2} · intent, not a track record</p>
 		<h2 id="first-90">What I'd do in my first 90 days on your team</h2>
 		<p class="note">These are plans, built from the habits above. They aren't claims about anything I've done yet.</p>
 		<ol class="plan">
@@ -178,7 +217,7 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 	{
 		testimonials.length > 0 && (
 			<section aria-labelledby="testimonials">
-				<p class="caption mono">fig. {sections.length + 2} · in other people's words</p>
+				<p class="caption mono">fig. {sections.length + 3} · in other people's words</p>
 				<h2 id="testimonials">Testimonials</h2>
 				<ul class="quotes">
 					{testimonials.map((t: any) => (
@@ -292,6 +331,33 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 	}
 	.step {
 		padding-top: 0.2rem;
+		font-weight: 600;
+	}
+	.map {
+		width: 100%;
+		max-width: calc(var(--measure) + 3rem);
+		padding: 0;
+		border-collapse: collapse;
+		font-size: 0.9375rem;
+	}
+	.map th,
+	.map td {
+		padding: 0.625rem 1rem;
+		border-bottom: 1px solid var(--rule);
+		text-align: left;
+		vertical-align: top;
+	}
+	.map tr:last-child > * {
+		border-bottom: 0;
+	}
+	.map thead th {
+		color: var(--muted);
+		font: 400 0.75rem var(--font-mono);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	.map tbody th {
+		width: 45%;
 		font-weight: 600;
 	}
 	blockquote {

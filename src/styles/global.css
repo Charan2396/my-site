@@ -152,3 +152,41 @@ a {
 	clip-path: inset(50%);
 	white-space: nowrap;
 }
+
+/* Print: no motion or controls; every record version, replay step and explainer step on paper. */
+@media print {
+	*,
+	*::before,
+	*::after {
+		animation: none !important;
+		transition: none !important;
+	}
+	body {
+		background: #fff;
+	}
+	.packet,
+	.token,
+	.pick,
+	.start,
+	.scroll-hint,
+	.strip,
+	[data-controls],
+	[data-icontrols],
+	.skip-link {
+		display: none !important;
+	}
+	[data-version][hidden],
+	[data-steps][hidden],
+	[data-step-item][hidden] {
+		display: block !important;
+	}
+	pre {
+		white-space: pre-wrap !important;
+		mask-image: none !important;
+	}
+	.stage,
+	.stage > * {
+		clip-path: none !important;
+		opacity: 1 !important;
+	}
+}

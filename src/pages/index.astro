@@ -13,8 +13,13 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 ---
 
 <Base>
-	<p class="eyebrow mono">Senior Data Platform Engineer</p>
-	<h1>The pipeline is the portfolio.</h1>
+	<h1>Sricharan Anand</h1>
+	<p class="subtitle">Senior Data Platform Engineer · 6+ years · ex-Amazon · San Jose, CA</p>
+	<ul class="contact mono" aria-label="Contact">
+		<li><a href="mailto:sricharan23@gmail.com">Email</a></li>
+		<li><a href="https://linkedin.com/in/charansri">LinkedIn</a></li>
+		<li><a href={url('resume/')}>Resume</a></li>
+	</ul>
 	<p class="lede">
 		I keep mainframe change data flowing through IBM MQ and Java services into Oracle and on to Google Cloud Pub/Sub, with
 		a focus on reliability, data correctness and automation. Each stage below opens a story about real work I did there.
@@ -22,6 +27,7 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 
 	<ImpactStrip />
 
+	<h2 class="tagline">The pipeline is the portfolio.</h2>
 	<Pipeline storyByStage={storyByStage} />
 
 	{
@@ -37,22 +43,67 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 						</li>
 					))}
 				</ul>
+				<p class="more mono">
+					<span>More to explore</span>
+					<a href={url('reconciliation/')}>Reconciliation explainer →</a>
+					<a href={url('projects/simple-dynamo/')}>Simple Dynamo ring →</a>
+				</p>
 			</section>
 		)
 	}
 </Base>
 
 <style>
-	.eyebrow {
-		margin: 0;
+	h1 {
+		margin-block: 0 0.25rem;
+		font-size: clamp(2.25rem, 6vw, 3.25rem);
+	}
+	.subtitle {
+		margin: 0 0 1rem;
 		color: var(--line);
-		font-size: 0.8125rem;
+		font-size: clamp(1.125rem, 2.6vw, 1.5rem);
+		font-weight: 600;
+		line-height: 1.35;
+	}
+	.contact {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 0 0 1.5rem;
+		padding: 0;
+		list-style: none;
+	}
+	.contact a {
+		display: inline-block;
+		padding: 0.375rem 0.875rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		background: var(--surface);
+		font-size: 0.875rem;
+		text-decoration: none;
+	}
+	.contact li:first-child a {
+		background: var(--line);
+		color: var(--surface);
+	}
+	.contact a:hover {
+		text-decoration: underline;
+	}
+	.tagline {
+		margin: 0 0 1.25rem;
+		font-size: 1.375rem;
+	}
+	.more {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+		margin-top: 2rem;
+		font-size: 0.875rem;
+	}
+	.more span {
+		color: var(--muted);
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-	}
-	h1 {
-		margin-block: 0.5rem 1rem;
-		font-size: clamp(2rem, 6vw, 3.25rem);
 	}
 	.lede {
 		max-width: var(--measure);

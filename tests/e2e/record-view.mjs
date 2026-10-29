@@ -15,6 +15,31 @@ for (const [w, h, scheme] of [[1280, 900, 'light'], [1280, 900, 'dark'], [390, 8
   await p.screenshot({ path: OUT + `m5-${w}-${scheme}.png`, fullPage: true });
   await p.close();
 }
+// counter: server-rendered and right after load (it once showed "0")
+const html = await (await fetch(base)).text();
+ok(/data-count[^>]*>1 \/ 5</.test(html), 'counter "1 / 5" in the initial HTML');
+const p0 = await b.newPage({ viewport: { width: 1280, height: 900 } });
+await p0.goto(base); await p0.waitForSelector('[data-controls]:not([hidden])');
+ok((await p0.textContent('[data-count]')) === '1 / 5', `counter after load: "${await p0.textContent('[data-count]')}"`);
+await p0.waitForTimeout(1500);
+ok((await p0.textContent('[data-count]')) === '1 / 5', 'counter still "1 / 5" after 1.5s');
+await p0.click('[data-step="1"]');
+ok((await p0.textContent('[data-count]')) === '2 / 5', 'counter "2 / 5" right after Next');
+ok((await p0.getAttribute('[data-step="1"]', 'aria-label')) === 'Next stage' && (await p0.getAttribute('[data-step="-1"]', 'aria-label')) === 'Previous stage', 'fig. 2 buttons labelled Next/Previous stage');
+await p0.close();
+// scroll hint at 390: shown only for record boxes that overflow
+const sh = await b.newPage({ viewport: { width: 390, height: 844 } });
+await sh.goto(base); await sh.waitForSelector('[data-controls]:not([hidden])');
+const hints = [];
+for (let i = 0; i < 5; i++) {
+  await sh.click(`[data-pick="${i}"]`);
+  hints.push(await sh.$eval('[data-version]:not([hidden])', (li) => { const pre = li.querySelector('pre'); return [pre.scrollWidth > pre.clientWidth, !li.querySelector('.scroll-hint').hidden]; }));
+}
+ok(hints.every(([o, h]) => o === h), `hint shown exactly when overflowing: ${JSON.stringify(hints)}`);
+ok(hints.some(([o]) => o), 'at least one record overflows at 390 (hint exercised)');
+await sh.setViewportSize({ width: 1280, height: 900 }); await sh.waitForTimeout(100);
+ok(await sh.$eval('[data-version]:not([hidden])', (li) => { const pre = li.querySelector('pre'); return (pre.scrollWidth > pre.clientWidth) === !li.querySelector('.scroll-hint').hidden; }), 'hint follows resize');
+await sh.close();
 // (b) click stage 4, (c) arrows, (e) live region
 const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
 await p.goto(base);

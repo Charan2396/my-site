@@ -35,7 +35,7 @@ export const incidentSteps: {
 	{
 		title: 'An alert fires for missing data',
 		caption:
-			'Rows stop landing in Oracle and the missing-data alert fires. A growing backlog or a downstream team asking would have said the same.',
+			'Rows stop landing in Oracle and the missing-data alert fires. A growing backlog, or a downstream team asking where their data was, would have told the same story.',
 		at: 2,
 		lit: [2, 3],
 		error: true,

@@ -7,16 +7,16 @@ const projects = (await getCollection('projects', (p) => !p.data.draft)).sort((a
 // interactive explainers, linked from the card they belong to
 const explainers: Record<string, { href: string; text: string }> = {
 	'simple-dynamo': { href: 'projects/simple-dynamo/', text: 'Try the interactive ring' },
-	'this-site': { href: 'reconciliation/', text: 'Also on this site: the reconciliation explainer' },
+	reconciliation: { href: 'reconciliation/', text: 'See how it finds drift: the interactive explainer' },
 };
 const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (await render(p)).Content })));
 ---
 
-<Base title="Projects" description="Older coursework and side projects, described only by what the code shows.">
+<Base title="Projects" description="A reconciliation proof of concept from my day job, this site, and graduate coursework.">
 	<h1>Projects</h1>
 	<p class="lede">
-		Work outside my day job: graduate coursework from the University at Buffalo, and this site. Each one is described only by
-		what its code shows.
+		A proof of concept I built on the production platform I run, then this site, then graduate coursework from the University
+		at Buffalo. Each one is described only by what it does.
 	</p>
 
 	<ol class="projects">
@@ -49,6 +49,11 @@ const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (awa
 			))
 		}
 	</ol>
+
+	<p class="also">
+		<span class="mono">Also from grad school</span> Machine learning coursework (CSE 674 and Pattern Recognition, 2019):
+		probabilistic graphical models, explainable AI, neural networks and generative models.
+	</p>
 </Base>
 
 <style>
@@ -105,6 +110,19 @@ const rendered = await Promise.all(projects.map(async (p) => ({ p, Content: (awa
 	}
 	.code + .code {
 		margin-top: 0.5rem;
+	}
+	.also {
+		max-width: calc(var(--measure) + 3rem);
+		margin: 2rem 0 0;
+		color: var(--muted);
+		font-size: 0.9375rem;
+	}
+	.also .mono {
+		margin-right: 0.5rem;
+		color: var(--line);
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
 	}
 	@media (max-width: 40rem) {
 		.card {

@@ -29,3 +29,5 @@ The tooling recovered ~16,900 missing order-line records across 23 company codes
 ## What I took from it
 
 When you repair data, the guards are the job. Making each step safe to repeat, and checking the result until the difference is zero, is what lets you touch production data with confidence.
+
+See how reconciliation finds drift: [interactive explainer](../../reconciliation/)

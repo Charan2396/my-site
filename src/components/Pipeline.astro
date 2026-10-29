@@ -69,9 +69,9 @@ const sourceStory = storyHref('source');
 			fig. 2 · the same order line at each stage · <mark>highlight</mark> = the changed field (qty 2 → 3)
 		</figcaption>
 		<div class="controls" data-controls hidden>
-			<button type="button" data-step="-1">← Prev</button>
+			<button type="button" data-step="-1" aria-label="Previous stage">← Prev</button>
 			<span class="mono" data-count aria-hidden="true">1 / {stages.length}</span>
-			<button type="button" data-step="1">Next →</button>
+			<button type="button" data-step="1" aria-label="Next stage">Next →</button>
 		</div>
 		<p class="sr-only" aria-live="polite" data-live></p>
 		<ol class="versions">
@@ -88,6 +88,9 @@ const sourceStory = storyHref('source');
 								<span class="format mono">{s.format}</span>
 							</header>
 							<pre tabindex="0" aria-label={`Sample record at the ${s.label} stage`}>{parts(s.sample).map((p, j) => (j % 2 ? <mark>{p}</mark> : p))}</pre>
+							<p class="scroll-hint mono" aria-hidden="true" hidden>
+								scroll →
+							</p>
 							{href && (
 								<p class="story mono">
 									<a href={href}>
@@ -107,7 +110,11 @@ const sourceStory = storyHref('source');
 		<ol class="strip mono" aria-hidden="true">
 			{stages.map((_, i) => <li data-strip>{i + 1}</li>)}
 		</ol>
-		<button class="start" type="button" data-replay hidden>Replay the incident: inject the corrupt message</button>
+		<p class="intro">
+			A real incident from my work, step by step: one corrupt message made the splitter reject tens of thousands of
+			messages, and this shows how it was caught and how the data was recovered.
+		</p>
+		<button class="start" type="button" data-replay hidden>Watch one bad message break the pipeline (7 steps)</button>
 		<div class="controls" data-icontrols hidden>
 			<button type="button" data-istep="-1">← Prev</button>
 			<span class="mono" data-icount aria-hidden="true">1 / {incidentSteps.length}</span>
@@ -174,6 +181,9 @@ const sourceStory = storyHref('source');
 			const iControls = root.querySelector<HTMLElement>('[data-icontrols]')!;
 			const iCount = root.querySelector<HTMLElement>('[data-icount]')!;
 			const playBtn = root.querySelector<HTMLButtonElement>('[data-play]')!;
+			const iPrev = iControls.querySelector<HTMLButtonElement>('[data-istep="-1"]')!;
+			const iNext = iControls.querySelector<HTMLButtonElement>('[data-istep="1"]')!;
+			const pres = versions.map((v) => v.querySelector('pre')!);
 			const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 			let current = 0;
 			let step = -1; // -1 = not replaying
@@ -203,8 +213,17 @@ const sourceStory = storyHref('source');
 				picks.forEach((b, j) => b.setAttribute('aria-pressed', String(j === current)));
 				count.textContent = `${current + 1} / ${versions.length}`;
 				if (step < 0) paint(current);
+				hint(pres[current]);
 				if (announce) live.textContent = `Stage ${current + 1} of ${versions.length}: ${versions[current].querySelector('h3')!.textContent}`;
 			};
+
+			// "scroll →" and a right-edge fade, only while the record box is wider than its frame and not scrolled to the end
+			const hint = (pre: HTMLElement) => {
+				const over = pre.scrollWidth > pre.clientWidth + 1;
+				pre.classList.toggle('is-clipped', over && pre.scrollLeft + pre.clientWidth < pre.scrollWidth - 1);
+				(pre.nextElementSibling as HTMLElement).hidden = !over;
+			};
+			for (const pre of pres) pre.addEventListener('scroll', () => hint(pre), { signal, passive: true });
 
 			const stopPlay = () => {
 				clearInterval(timer);
@@ -217,6 +236,11 @@ const sourceStory = storyHref('source');
 				const s = steps[step].dataset;
 				paint(Number(s.at), s.lit ? s.lit.split(' ').map(Number) : [], 'error' in s);
 				iCount.textContent = `${step + 1} / ${steps.length}`;
+				// no wrap at the ends; a button that loses its use hands focus to the other one
+				const f = document.activeElement;
+				iPrev.disabled = step === 0;
+				iNext.disabled = step === steps.length - 1;
+				if ((f === iPrev || f === iNext) && f.disabled) (f === iPrev ? iNext : iPrev).focus();
 				live.textContent = `Incident step ${step + 1} of ${steps.length}: ${steps[step].querySelector('h3')!.textContent}`;
 				if (step === steps.length - 1) stopPlay();
 			};
@@ -282,7 +306,7 @@ const sourceStory = storyHref('source');
 				show(current + d);
 				if (picks.includes(document.activeElement as HTMLButtonElement)) picks[current].focus();
 			});
-			addEventListener('resize', place, { signal });
+			addEventListener('resize', () => (place(), hint(pres[current])), { signal });
 			document.fonts?.ready.then(place);
 			show(0, false);
 			// first placement without a slide; later moves animate (CSS transition, zeroed under reduced motion)
@@ -709,7 +733,7 @@ const sourceStory = storyHref('source');
 		font: 0.8125rem var(--font-mono);
 		cursor: pointer;
 	}
-	.controls button:hover,
+	.controls button:hover:not(:disabled),
 	.start:hover {
 		background: color-mix(in srgb, var(--line) 9%, var(--surface));
 	}
@@ -771,11 +795,33 @@ const sourceStory = storyHref('source');
 		font-size: 0.8125rem;
 		line-height: 1.55;
 	}
+	pre.is-clipped {
+		mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+	}
+	.scroll-hint {
+		margin: -0.5rem 1rem 0.5rem;
+		color: var(--muted);
+		font-size: 0.75rem;
+		text-align: right;
+	}
+	.scroll-hint[hidden] {
+		display: none;
+	}
 	/* fig. 3: incident replay; without JS all steps show as a timeline */
 	.start {
 		padding: 0.5rem 0.875rem;
-		border-color: var(--error);
-		color: var(--error);
+		background: color-mix(in srgb, var(--line) 9%, var(--surface));
+		font-weight: 600;
+	}
+	.intro {
+		max-width: var(--measure);
+		margin: 0 0 0.75rem;
+	}
+	.controls button:disabled {
+		border-color: var(--rule);
+		background: var(--surface);
+		color: var(--muted);
+		cursor: default;
 	}
 	.steps {
 		display: grid;
@@ -843,7 +889,10 @@ const sourceStory = storyHref('source');
 	}
 	.backlog.is-drain .bar {
 		border-style: dashed;
-		border-color: var(--rule);
+		border-color: var(--line);
+	}
+	.backlog.is-drain .bar span {
+		background: var(--line);
 	}
 	.backlog.is-drain .bar span {
 		width: 0;

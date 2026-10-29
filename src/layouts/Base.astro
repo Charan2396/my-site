@@ -19,7 +19,6 @@ const {
 const nav = [
 	{ href: 'working-with-me/', label: 'Working with me' },
 	{ href: 'projects/', label: 'Projects' },
-	{ href: 'build-log/', label: 'Build log' },
 	{ href: 'resume/', label: 'Resume' },
 ];
 const current = Astro.url.pathname.replace(/\/$/, '');
@@ -65,11 +64,16 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 		<footer class="site-footer">
 			<div class="wrap bar mono">
 				<span>© {new Date().getFullYear()} {name}</span>
-				<ul>
-					<li><a href="mailto:sricharan23@gmail.com">Email</a></li>
-					<li><a href="https://linkedin.com/in/charansri">LinkedIn</a></li>
-					<li><a href="https://github.com/Charan2396">GitHub</a></li>
-				</ul>
+				<nav aria-label="Footer">
+					<ul>
+						<li><a href="mailto:sricharan23@gmail.com">Email</a></li>
+						<li><a href="https://linkedin.com/in/charansri">LinkedIn</a></li>
+						<li><a href="https://github.com/Charan2396">GitHub</a></li>
+						<li>
+							<a href={url('build-log/')} aria-current={current === url('build-log/').replace(/\/$/, '') ? 'page' : undefined}>Build log</a>
+						</li>
+					</ul>
+				</nav>
 			</div>
 		</footer>
 	</body>
@@ -112,7 +116,7 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 		text-decoration: none;
 		letter-spacing: 0.02em;
 	}
-	nav a {
+	.site-header nav a {
 		color: var(--ink);
 		text-decoration: none;
 	}
@@ -124,12 +128,12 @@ const current = Astro.url.pathname.replace(/\/$/, '');
 	main {
 		padding-block: 3rem;
 	}
-	/* Keep the four nav links on one line under the name on a 390px phone. */
+	/* Keep the three nav links on one line under the name on a 390px phone. */
 	@media (max-width: 30rem) {
-		nav ul {
+		.site-header nav ul {
 			gap: 0.25rem 0.875rem;
 		}
-		nav {
+		.site-header nav {
 			font-size: 0.9375rem;
 		}
 	}

@@ -1,10 +1,27 @@
 ---
-// Figures quoted from the first Experience bullet in content/resume.md.
+// Figures quoted from the first Experience bullet in content/resume.md. Static on purpose: no count-up.
+// The stack row lists only tools named in content/resume.md, ordered for data-engineering readers.
 const tiles = [
 	{ prefix: '', count: 300, suffix: '+', unit: 'tables', caption: 'IMS, Db2 and VSAM, replicated into Oracle' },
 	{ prefix: '', count: 30, suffix: '+', unit: 'downstream teams', caption: 'served by the platform' },
-	{ prefix: '~', count: 10, suffix: 'M', unit: 'rows/day', caption: 'roughly, through the pipeline' },
+	{ prefix: '~', count: 10, suffix: 'M', unit: 'rows/day', caption: 'through the pipeline' },
 	{ prefix: '', count: 3, suffix: '', unit: 'Oracle instances', caption: 'production operational data stores' },
+];
+const stack = [
+	'Change data capture (CDC)',
+	'Event-driven messaging',
+	'IBM MQ',
+	'Google Cloud Pub/Sub',
+	'BigQuery',
+	'Oracle 19c',
+	'PL/SQL',
+	'Snowflake',
+	'Python',
+	'Java',
+	'SQL',
+	'Datadog',
+	'AWS',
+	'Airflow (in progress)',
 ];
 ---
 
@@ -16,7 +33,7 @@ const tiles = [
 				<li>
 					<span class="sr-only">{`${t.prefix}${t.count}${t.suffix} ${t.unit}: ${t.caption}`}</span>
 					<span class="figure" aria-hidden="true">
-						<span class="value mono" data-count={t.count} data-prefix={t.prefix} data-suffix={t.suffix}>{`${t.prefix}${t.count}${t.suffix}`}</span>
+						<span class="value mono">{`${t.prefix}${t.count}${t.suffix}`}</span>
 						<span class="unit">{t.unit}</span>
 					</span>
 					<span class="caption mono" aria-hidden="true">
@@ -26,40 +43,8 @@ const tiles = [
 			))
 		}
 	</ul>
+	<p class="stack mono"><span class="stack-label">Stack</span> {stack.join(' · ')}</p>
 </section>
-
-<script>
-	import { onPage } from '../lib/stepper';
-	// Count up once when scrolled into view. The HTML already holds the final values (no-JS and reduced motion).
-	// Runs on every astro:page-load; the observer is released when the page is swapped out.
-	function init(signal: AbortSignal) {
-		if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) return;
-		const els = document.querySelectorAll<HTMLElement>('[data-count]:not([data-counted])');
-		if (!els.length) return;
-		const io = new IntersectionObserver((entries) => {
-			for (const e of entries) {
-				if (!e.isIntersecting) continue;
-				io.unobserve(e.target);
-				const el = e.target as HTMLElement;
-				const { prefix = '', suffix = '' } = el.dataset;
-				const target = Number(el.dataset.count);
-				const start = performance.now();
-				const step = (now: number) => {
-					const t = Math.min((now - start) / 800, 1);
-					el.textContent = prefix + Math.round(target * (1 - (1 - t) ** 3)) + suffix;
-					if (t < 1) requestAnimationFrame(step);
-				};
-				requestAnimationFrame(step);
-			}
-		});
-		signal.addEventListener('abort', () => io.disconnect());
-		for (const el of els) {
-			el.dataset.counted = '';
-			io.observe(el);
-		}
-	}
-	onPage(init);
-</script>
 
 <style>
 	.impact {
@@ -75,7 +60,8 @@ const tiles = [
 	}
 	ul {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+		/* 4 across when wide, 2 × 2 below that: never a 3 + 1 orphan */
+		grid-template-columns: repeat(4, 1fr);
 		gap: 0.75rem;
 		margin: 0;
 		padding: 0;
@@ -110,10 +96,24 @@ const tiles = [
 		font-size: 0.75rem;
 		letter-spacing: 0.02em;
 	}
-	@media (max-width: 40rem) {
+	.stack {
+		margin: 0.75rem 0 0;
+		color: var(--muted);
+		font-size: 0.8125rem;
+		line-height: 1.7;
+	}
+	.stack-label {
+		margin-right: 0.5rem;
+		color: var(--line);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+	@media (max-width: 64rem) {
 		ul {
 			grid-template-columns: 1fr 1fr;
 		}
+	}
+	@media (max-width: 40rem) {
 		.value {
 			font-size: 1.625rem;
 		}
