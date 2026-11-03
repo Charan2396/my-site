@@ -4,13 +4,32 @@ import Pipeline from '../components/Pipeline.astro';
 import ImpactStrip from '../components/ImpactStrip.astro';
 import CareerStrip from '../components/CareerStrip.astro';
 import { getStories } from '../lib/stories';
+import { getDesigns } from '../lib/designs';
 import { stages } from '../lib/stages';
 import { url } from '../lib/url';
 
 const stories = await getStories();
-const storyByStage: Record<string, string> = {};
-for (const s of stories) storyByStage[s.data.stage] ??= s.id;
-const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
+const designs = await getDesigns();
+// Each stage card links to the design for that stage, else its first story (plus a second story, if any).
+const links: Record<string, { href: string; kind: 'design' | 'story'; also?: { href: string; label: string } }> = {};
+for (const { key } of stages) {
+	const d = designs.find((x) => x.data.stage === key);
+	const [first, second] = stories.filter((x) => x.data.stage === key);
+	if (d) links[key] = { href: url(`designs/${d.id}/`), kind: 'design' };
+	else if (first)
+		links[key] = {
+			href: url(`stories/${first.id}/`),
+			kind: 'story',
+			also: second && { href: url(`stories/${second.id}/`), label: `and ${second.data.short ?? 'another story'}` },
+		};
+}
+const stageLabel = (key?: string) => stages.find((s) => s.key === key)?.label;
+// Hero proof chips: each restates a line of content/resume.md.
+const proof = [
+	{ text: 'CDC → Pub/Sub broker, co-built from scratch', href: 'designs/cdc-pubsub-broker/' },
+	{ text: '5,000+-queue migration architecture', href: 'designs/ems-mq-migration/' },
+	{ text: 'Reconciliation engine PoC across 3 instances', href: 'designs/reconciliation-engine/' },
+];
 ---
 
 <Base>
@@ -23,11 +42,21 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 			<li><a class="btn" href={url('resume/')}>Resume</a></li>
 		</ul>
 		<p class="lede">
-			I own correctness for a real-time change-data-capture backbone: mainframe changes flow through IBM MQ and Java services
-			into Oracle, and out to Google Cloud Pub/Sub for cloud consumers. I can find the one bad message among tens of thousands
-			of rejects, prove which rows didn't land, and repair them by replaying from the source instead of patching the copy. Each
-			stage below opens a story about real work I did there.
+			I design and build data systems that move change data off legacy platforms and into the cloud: <abbr
+				title="change data capture">CDC</abbr> streams, messaging architectures, reconciliation tooling, built so the teams
+			downstream can trust them.
 		</p>
+		<ul class="proof" aria-label="Selected work">
+			{
+				proof.map((c) => (
+					<li>
+						<a class="chip press" href={url(c.href)}>
+							{c.text} →
+						</a>
+					</li>
+				))
+			}
+		</ul>
 	</section>
 	<script is:inline>
 		// Materialize the hero once per visit (opacity + scale, CSS); without JS nothing is hidden.
@@ -44,40 +73,44 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 	<CareerStrip />
 
 	<h2 class="tagline">The pipeline is the portfolio.</h2>
-	<Pipeline storyByStage={storyByStage} />
+	<Pipeline links={links} />
 
-	{
-		stories.length > 0 && (
-			<section class="stories-section" aria-labelledby="stories-heading">
-				<h2 id="stories-heading">Stories</h2>
-				<ul class="stories">
-					{stories.map((s) => (
-						<li>
-							<a class="story card press" href={url(`stories/${s.id}/`)}>
-								<span class="stage-tag">{stageLabel(s.data.stage)} stage</span>
-								<span class="sr-only">: </span>
-								<span class="title">{s.data.title}</span>
-								<span class="go" aria-hidden="true">
-									Read →
-								</span>
-							</a>
-						</li>
-					))}
-				</ul>
-				<div class="more">
-					<span class="caption">More to explore</span>
-					<a class="btn" href={url('reconciliation/')}>Reconciliation explainer →</a>
-					<a class="btn" href={url('projects/simple-dynamo/')}>Simple Dynamo ring →</a>
-				</div>
-			</section>
-		)
-	}
+	<section class="designs-section" aria-labelledby="designs-heading">
+		<h2 id="designs-heading">Selected designs</h2>
+		<ul class="designs">
+			{
+				designs.map((d) => (
+					<li>
+						<a class="design card press" href={url(`designs/${d.id}/`)}>
+							<span class="stage-tag">Design doc{d.data.stage && ` · ${stageLabel(d.data.stage)} stage`}</span>
+							<span class="sr-only">: </span>
+							<span class="title">{d.data.title}</span>
+							<span class="sr-only">. </span>
+							<span class="chip">{d.data.proof}</span>
+						</a>
+					</li>
+				))
+			}
+		</ul>
+
+		<h3 id="held-heading">From running it: incidents and fixes</h3>
+		<ul class="held" aria-labelledby="held-heading">
+			{
+				stories.map((s) => (
+					<li>
+						<a href={url(`stories/${s.id}/`)}>{s.data.title} →</a>
+						<span class="caption"> · {stageLabel(s.data.stage)} stage</span>
+					</li>
+				))
+			}
+		</ul>
+	</section>
 </Base>
 
 <style>
 	.hero {
 		max-width: 52rem;
-		margin-bottom: 4rem;
+		margin-bottom: var(--space-16);
 		transform-origin: 0 0;
 	}
 	@media (prefers-reduced-motion: no-preference) {
@@ -92,60 +125,83 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 		}
 	}
 	h1 {
-		margin-block: 0 0.75rem;
-		font-size: clamp(2.75rem, 8vw, 4.5rem);
+		margin-block: 0 var(--space-3);
+		font-size: var(--text-display);
 		font-weight: 700;
 		line-height: 1.05;
 		letter-spacing: -0.03em;
 	}
 	.subtitle {
-		margin: 0 0 1.75rem;
+		margin: 0 0 var(--space-6);
 		color: var(--muted);
-		font-size: clamp(1.1875rem, 2.4vw, 1.625rem);
+		font-size: var(--text-xl);
 		font-weight: 600;
 		line-height: 1.25;
 		letter-spacing: -0.012em;
 	}
-	.contact {
+	.contact,
+	.proof {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.625rem;
-		margin: 0 0 2rem;
+		gap: var(--space-2) var(--space-3);
+		margin: 0 0 var(--space-8);
 		padding: 0;
 		list-style: none;
 	}
 	.lede {
 		margin: 0;
 	}
+	.proof {
+		margin: var(--space-6) 0 0;
+	}
+	/* a proof chip: small tinted pill; on cards it is a label, in the hero a link */
+	.chip {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2rem;
+		padding: var(--space-1) var(--space-3);
+		border-radius: 999px;
+		background: var(--tint);
+		color: var(--accent);
+		font-size: var(--text-xs);
+		font-weight: 600;
+		line-height: 1.3;
+		letter-spacing: 0.01em;
+	}
+	a.chip:hover {
+		background: var(--fill-strong);
+		text-decoration: none;
+	}
 	.tagline {
-		margin: 5rem 0 0.75rem;
-		font-size: clamp(2rem, 4.5vw, 3rem);
+		margin: var(--space-20) 0 var(--space-3);
+		font-size: var(--text-3xl);
 		line-height: 1.08;
 		letter-spacing: -0.025em;
 	}
-	.stories-section {
-		margin-top: 5rem;
+	.designs-section {
+		margin-top: var(--space-20);
 	}
-	.stories-section h2 {
-		margin: 0 0 1.25rem;
+	.designs-section h2 {
+		margin: 0 0 var(--space-5);
 	}
-	.stories {
+	.designs {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
-		gap: 1rem;
+		gap: var(--space-4);
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
-	.stories li {
+	.designs li {
 		display: flex;
 	}
-	.story {
+	.design {
 		display: flex;
 		flex-direction: column;
-		gap: 0.375rem;
+		align-items: flex-start;
+		gap: var(--space-2);
 		width: 100%;
-		padding: 1.25rem 1.375rem;
+		padding: var(--space-5) var(--space-6);
 		box-shadow: var(--shadow-sm);
 		color: var(--ink);
 		text-decoration: none;
@@ -153,37 +209,39 @@ const stageLabel = (key: string) => stages.find((s) => s.key === key)?.label;
 			transform 100ms ease-out,
 			box-shadow 0.2s ease;
 	}
-	.story:hover {
+	.design:hover {
 		text-decoration: none;
 		box-shadow: var(--shadow-md);
 	}
+	/* on a card the proof can wrap to two lines, where a full pill reads as a blob */
+	.design .chip {
+		margin-top: auto;
+		border-radius: var(--radius-sm);
+	}
 	.stage-tag {
 		color: var(--muted);
-		font-size: 0.8125rem;
+		font-size: var(--text-xs);
 		font-weight: 600;
 		letter-spacing: 0.01em;
 	}
 	.title {
-		font-size: 1.125rem;
+		padding-bottom: var(--space-2);
+		font-size: var(--text-md);
 		font-weight: 600;
 		line-height: 1.3;
 		letter-spacing: -0.01em;
 	}
-	.go {
-		margin-top: auto;
-		padding-top: 0.5rem;
-		color: var(--accent);
-		font-size: 0.875rem;
+	.designs-section h3 {
+		margin: var(--space-12) 0 var(--space-3);
+	}
+	.held {
+		display: grid;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.held a {
 		font-weight: 600;
-	}
-	.more {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.625rem 0.75rem;
-		margin-top: 2rem;
-	}
-	.more .caption {
-		margin-right: 0.25rem;
 	}
 </style>

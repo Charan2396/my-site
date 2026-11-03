@@ -125,23 +125,23 @@ const tag = { ok: '', missing: 'missing', stale: 'stale', deleted: 'deleted', fi
 		border-radius: 50%;
 		background: var(--accent-fill);
 		color: var(--on-accent);
-		font-size: 0.8125rem;
+		font-size: var(--text-xs);
 		font-weight: 600;
 	}
 	h3 {
 		margin: 0;
-		font-size: 1.0625rem;
+		font-size: var(--text-md);
 	}
 	.caption {
 		max-width: var(--measure);
 		margin: 0.625rem 0 1.25rem;
 		color: var(--ink);
-		font-size: 1rem;
+		font-size: var(--text-md);
 	}
 	h4 {
 		margin: 0 0 0.625rem;
 		color: var(--ink);
-		font-size: 0.875rem;
+		font-size: var(--text-sm);
 		font-weight: 600;
 		letter-spacing: 0.005em;
 	}
@@ -168,7 +168,7 @@ const tag = { ok: '', missing: 'missing', stale: 'stale', deleted: 'deleted', fi
 		margin: 0;
 		padding: 0;
 		list-style: none;
-		font-size: 0.8125rem;
+		font-size: var(--text-xs);
 	}
 	.row {
 		display: flex;
@@ -180,7 +180,7 @@ const tag = { ok: '', missing: 'missing', stale: 'stale', deleted: 'deleted', fi
 		background: var(--surface);
 	}
 	.tag {
-		font-size: 0.75rem;
+		font-size: var(--text-xs);
 		font-weight: 600;
 	}
 	.row.is-missing,
@@ -234,7 +234,7 @@ const tag = { ok: '', missing: 'missing', stale: 'stale', deleted: 'deleted', fi
 		padding-top: 0.875rem;
 		border-top: 1px solid var(--rule);
 		color: var(--muted);
-		font-size: 0.8125rem;
+		font-size: var(--text-xs);
 	}
 	.panel {
 		margin-top: 1rem;
@@ -264,7 +264,7 @@ const tag = { ok: '', missing: 'missing', stale: 'stale', deleted: 'deleted', fi
 	.keys {
 		display: block;
 		margin-top: 0.125rem;
-		font-size: 0.8125rem;
+		font-size: var(--text-xs);
 	}
 	@media (max-width: 48rem) {
 		.board {

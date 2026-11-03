@@ -1,0 +1,111 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { resolveRelated } from '../lib/related';
+
+const decisions = await Promise.all(
+	(await getCollection('decisions')).sort((a, b) => a.id.localeCompare(b.id)).map(async (d) => ({ ...d.data, id: d.id, links: await resolveRelated(d.data.related) })),
+);
+---
+
+<Base title="Decision log" description="Short records of design choices: the context, the decision, and what followed.">
+	<p class="eyebrow">Decisions</p>
+	<h1>Decision log</h1>
+	<p class="lede">
+		Architecture decision records, or ADRs, are short records of a design choice: the context, the decision, and what
+		followed.
+	</p>
+	<ol class="log">
+		{
+			decisions.map((d) => (
+				<li class="card" id={d.id}>
+					<p class="num">ADR {d.id.slice(4)}</p>
+					<h2>{d.title}</h2>
+					<dl>
+						<dt>Context</dt>
+						<dd>{d.context}</dd>
+						<dt>Decision</dt>
+						<dd>{d.decision}</dd>
+						{d.consequence && (
+							<>
+								<dt>What followed</dt>
+								<dd>{d.consequence}</dd>
+							</>
+						)}
+					</dl>
+					{d.links.length > 0 && (
+						<ul class="links">
+							{d.links.map((l) => (
+								<li>
+									<a href={l.href}>{l.label}&nbsp;→</a>
+								</li>
+							))}
+						</ul>
+					)}
+				</li>
+			))
+		}
+	</ol>
+</Base>
+
+<style>
+	h1 {
+		margin-block: 0.75rem 1.25rem;
+	}
+	.lede {
+		color: var(--muted);
+	}
+	.log {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+		gap: 1rem;
+		margin: 2.5rem 0 0;
+		padding: 0;
+		list-style: none;
+	}
+	.card {
+		display: flex;
+		flex-direction: column;
+		padding: 1.25rem 1.375rem 1.375rem;
+		box-shadow: var(--shadow-sm);
+	}
+	.num {
+		margin: 0 0 0.25rem;
+		color: var(--muted);
+		font: 600 var(--text-xs)/1.3 var(--font-mono);
+	}
+	h2 {
+		margin: 0;
+		font-size: var(--text-lg);
+		font-weight: 600;
+		line-height: 1.25;
+		letter-spacing: -0.01em;
+	}
+	dl {
+		margin: 0.75rem 0 0;
+	}
+	dt {
+		margin-top: 0.75rem;
+		color: var(--muted);
+		font-size: var(--text-xs);
+		font-weight: 600;
+		letter-spacing: 0.01em;
+	}
+	dt:first-child {
+		margin-top: 0;
+	}
+	dd {
+		margin: 0.125rem 0 0;
+		line-height: 1.5;
+	}
+	.links {
+		margin: auto 0 0;
+		padding: 1rem 0 0;
+		list-style: none;
+		font-size: var(--text-sm);
+		font-weight: 600;
+	}
+	.links li + li {
+		margin-top: 0.375rem;
+	}
+</style>

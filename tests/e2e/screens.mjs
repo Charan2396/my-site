@@ -18,16 +18,23 @@ const pp = await b.newPage({ viewport: { width: 1280, height: 900 } });
 await pp.goto(base + 'projects/'); await pp.screenshot({ path: OUT + 'fb-projects-1280-light.png', fullPage: true });
 await pp.close();
 
-// print: every fig. 2 version and fig. 3 step visible, controls and motion hidden
+// print: every fig. 2 version (home) and fig. 3 step (one-bad-message story) visible, controls and motion hidden
 const p = await b.newPage();
-await p.goto(base); await p.waitForSelector('[data-controls]:not([hidden])');
-await p.emulateMedia({ media: 'print' });
-const pr = await p.evaluate(() => ({
-  versions: [...document.querySelectorAll('[data-version]')].filter((x) => x.getBoundingClientRect().height > 0).length,
-  steps: [...document.querySelectorAll('[data-step-item]')].filter((x) => x.getBoundingClientRect().height > 0).length,
-  shown: [...document.querySelectorAll('.token, .packet, [data-controls], [data-icontrols], [data-replay]')].filter((x) => x.getBoundingClientRect().height > 0).length,
-}));
-ok(pr.versions === 5 && pr.steps === 7 && pr.shown === 0, `print: ${JSON.stringify(pr)}`);
+const printed = async (path, ready) => {
+  await p.goto(base + path); await p.waitForSelector(ready);
+  await p.emulateMedia({ media: 'print' });
+  const r = await p.evaluate(() => ({
+    versions: [...document.querySelectorAll('[data-version]')].filter((x) => x.getBoundingClientRect().height > 0).length,
+    steps: [...document.querySelectorAll('[data-step-item]')].filter((x) => x.getBoundingClientRect().height > 0).length,
+    shown: [...document.querySelectorAll('.token, .packet, .strip, [data-controls], [data-icontrols], [data-replay]')].filter((x) => x.getBoundingClientRect().height > 0).length,
+  }));
+  await p.emulateMedia({ media: 'screen' });
+  return r;
+};
+const home = await printed('', '[data-controls]:not([hidden])');
+ok(home.versions === 5 && home.steps === 0 && home.shown === 0, `print home: ${JSON.stringify(home)}`);
+const obm = await printed('stories/one-bad-message/', '[data-replay]:not([hidden])');
+ok(obm.steps === 7 && obm.shown === 0, `print one-bad-message: ${JSON.stringify(obm)}`);
 await b.close();
 console.log(fails ? `${fails} FAIL` : 'ALL PASS');
 process.exit(fails ? 1 : 0);

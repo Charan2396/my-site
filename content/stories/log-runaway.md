@@ -2,6 +2,7 @@
 title: 'Shutting down a billion-event-a-day log runaway'
 stage: process
 order: 2
+short: 'the log runaway'
 summary: 'I established Datadog observability for the MQ and Java replication services, redesigned a noisy queue-depth alert, and shut down a log-ingestion runaway of over one billion events per day.'
 metrics: ['over one billion events per day', 'noisy queue-depth alert redesigned']
 ---
@@ -16,7 +17,7 @@ Observability has its own failure modes, though. An alert that fires too often t
 
 I established Datadog observability for the MQ and Java replication services, in three parts:
 
-- **Custom DogStatsD health metrics** across queue managers, mainframe channels and Java processes.
+- **Custom <abbr title="custom health metrics">DogStatsD</abbr> health metrics** across queue managers, mainframe channels and Java processes.
 - **A redesigned queue-depth alert**, replacing one that was noisy.
 - **Shutting down the log-ingestion runaway** of over one billion events per day.
 

@@ -2,15 +2,85 @@
 import { existsSync } from 'node:fs';
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Gloss from '../components/Gloss.astro';
 import { getStories } from '../lib/stories';
 import { url } from '../lib/url';
 
-// Every claim restates a bullet in content/resume.md; `story` links the claim to its evidence.
-type Claim = { label: string; text: string; story?: string; explainer?: { href: string; text: string } };
+// Every claim restates a bullet in content/resume.md; `story` and `links` point to the evidence.
+type Claim = { label: string; text: string; story?: string; links?: { href: string; text: string }[] };
+const seen = new Set<string>(); // gloss each jargon term once on this page
 const sections: { id: string; title: string; caption: string; claims: Claim[] }[] = [
 	{
+		id: 'design',
+		title: 'How I design',
+		caption: 'start from the constraints',
+		claims: [
+			{
+				label: 'reuse before build',
+				text: 'I co-designed a store-and-forward IBM MQ architecture that cut planned-downtime exposure for a warehouse integration by over 90 percent, while reusing existing infrastructure.',
+				links: [{ href: 'designs/store-and-forward/', text: 'Design: store-and-forward' }],
+			},
+			{
+				label: 'migration architecture',
+				text: 'I profiled a TIBCO EMS estate of 5,000+ queues, wrote the EMS-to-MQ migration architecture, sandbox and onboarding program, and presented it to a 65-invitee audience.',
+				links: [{ href: 'designs/ems-mq-migration/', text: 'Design: EMS to MQ migration' }],
+			},
+			{
+				label: 'new paths',
+				text: 'I co-built, from scratch, a real-time Java data broker that converts raw mainframe CDC messages into JSON and publishes them to Google Cloud Pub/Sub for downstream teams.',
+				links: [{ href: 'designs/cdc-pubsub-broker/', text: 'Design: CDC to Pub/Sub broker' }],
+			},
+			{
+				label: 'read-only first',
+				text: 'As a proof of concept, I built a read-only engine that fingerprints each table and company code and classifies drift in both directions across three Oracle instances. It caught a flawed key heuristic before it produced false drift.',
+				links: [
+					{ href: 'designs/reconciliation-engine/', text: 'Design: reconciliation engine' },
+					{ href: 'reconciliation/', text: 'Interactive explainer: how reconciliation finds drift' },
+				],
+			},
+			{
+				label: 'least privilege by design',
+				text: 'I designed and validated an Active Directory (SSSD/PAM) authentication model for IBM MQ with group-governed access and least-privilege authority, removing per-host local accounts.',
+				links: [{ href: 'designs/ad-auth-mq/', text: 'Design: AD authentication for MQ' }],
+			},
+			{
+				label: 'less code, faster',
+				text: 'I cut message-splitter processing for a 10K-message batch from roughly 3–4 minutes to about 30 seconds, and refactored the splitter layer to remove 10,000+ lines of redundant code.',
+				story: 'splitter-30-seconds',
+			},
+		],
+	},
+	{
+		id: 'change-safely',
+		title: 'How I ship change safely',
+		caption: 'change control',
+		claims: [
+			{
+				label: 'upgrades',
+				text: 'I led the IBM MQ upgrade lifecycle for a multi-environment platform and established a non-production-to-production upgrade sequence. When a client-compatibility defect appeared, I ran a controlled rollback and cold restore.',
+			},
+			{
+				label: 'guarded backfills',
+				text: 'I built backfill and purge tooling with idempotent inserts, cascade guards and zero-difference reconciliation. It recovered ~16,900 missing order-line records across 23 company codes.',
+				story: 'backfill-16900',
+			},
+			{
+				label: 'cutovers',
+				text: 'I delivered production MQ queues and a remote splitter for six European countries, coordinating a weekend cutover across mainframe, Linux and consumer teams.',
+			},
+			{
+				label: 'isolate, then fix',
+				text: 'When the queue splitter had a message-ordering defect, I rolled back a change to isolate it, then redesigned the queue-split logic to preserve ordering.',
+			},
+			{
+				label: 'evidence first',
+				text: 'I root-caused an Oracle trigger foreign-key race behind missing child records using systematic evidence queries, and proposed a non-invasive fix.',
+			},
+		],
+	},
+	{
 		id: 'keep-up',
-		title: 'How I keep systems up',
+		title: 'How I keep it running',
 		caption: 'reliability',
 		claims: [
 			{
@@ -31,44 +101,6 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 				text: 'I isolated a corrupt message that made a splitter reject tens of thousands of messages, and traced a high-CPU incident to a BigDecimal column-index error.',
 				story: 'one-bad-message',
 			},
-			{
-				label: 'less downtime',
-				text: 'I co-designed a store-and-forward IBM MQ architecture that cut planned-downtime exposure for a warehouse integration by over 90 percent, while reusing existing infrastructure.',
-				story: 'store-and-forward',
-			},
-		],
-	},
-	{
-		id: 'change-safely',
-		title: 'How I change things safely',
-		caption: 'change control',
-		claims: [
-			{
-				label: 'upgrades',
-				text: 'I led the IBM MQ upgrade lifecycle for a multi-environment platform and established a non-production-to-production upgrade sequence. When a client-compatibility defect appeared, I ran a controlled rollback and cold restore.',
-			},
-			{
-				label: 'guarded backfills',
-				text: 'I built backfill and purge tooling with idempotent inserts, cascade guards and zero-difference reconciliation. It recovered ~16,900 missing order-line records across 23 company codes.',
-				story: 'backfill-16900',
-			},
-			{
-				label: 'isolate, then fix',
-				text: 'When the queue splitter had a message-ordering defect, I rolled back a change to isolate it, then redesigned the queue-split logic to preserve ordering.',
-			},
-			{
-				label: 'evidence first',
-				text: 'I root-caused an Oracle trigger foreign-key race behind missing child records using systematic evidence queries, and proposed a non-invasive fix.',
-			},
-			{
-				label: 'reconciliation',
-				text: 'As a proof of concept, I built a read-only engine that fingerprints each table and company code and classifies drift in both directions across three Oracle instances. It caught a flawed key heuristic before it produced false drift.',
-				explainer: { href: 'reconciliation/', text: 'Interactive explainer: how reconciliation finds drift' },
-			},
-			{
-				label: 'cutovers',
-				text: 'I delivered production MQ queues and a remote splitter for six European countries, coordinating a weekend cutover across mainframe, Linux and consumer teams.',
-			},
 		],
 	},
 	{
@@ -81,24 +113,36 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 				text: 'I introduced source control to a previously unversioned Java replication codebase, and upgraded splitter logging from Log4j 1.x to 2.x.',
 			},
 			{
-				label: 'less code, faster',
-				text: 'I cut message-splitter processing for a 10K-message batch from roughly 3–4 minutes to about 30 seconds, and refactored the splitter layer to remove 10,000+ lines of redundant code.',
-				story: 'splitter-30-seconds',
+				label: 'roadmap and standards',
+				text: 'I set the 2025 platform roadmap and the pull-request standard.',
 			},
 			{
-				label: 'new paths',
-				text: 'I co-built, from scratch, a real-time Java data broker that converts raw mainframe CDC messages into JSON and publishes them to Google Cloud Pub/Sub for downstream teams.',
-				story: 'pubsub-broker',
+				label: 'people',
+				text: 'I mentored engineers and sat on an Oracle DBA hiring panel.',
 			},
 			{
-				label: 'sharing the plan',
-				text: 'I profiled a TIBCO EMS estate of 5,000+ queues, wrote the EMS-to-MQ migration architecture, sandbox and onboarding program, and presented it to a 65-invitee audience.',
-			},
-			{
-				label: 'also on my plate',
-				text: 'I set the 2025 platform roadmap and the pull-request standard, mentored engineers and sat on an Oracle DBA hiring panel, and drove a middleware vulnerability backlog (Log4j, IBM MQ, IBM Java, Oracle client) toward zero.',
+				label: 'vulnerabilities',
+				text: 'I drove a middleware vulnerability backlog (Log4j, IBM MQ, IBM Java, Oracle client) toward zero.',
 			},
 		],
+	},
+];
+
+// How I'd reason about a sample problem; the decision and checks are what the reconciliation proof of concept does.
+const method = [
+	{ step: 'Clarify', text: 'Which tables and fields have to match, and how fresh does "matching" need to be: today, or all of history?' },
+	{ step: 'Constraints', text: 'Three production instances, so the check stays read-only and light enough to run against live systems.' },
+	{
+		step: 'Options',
+		text: "I'd weigh three: compare row counts only (cheap, but blind to which rows), compare every row (exact, but heavy on production), or fingerprint each slice with a row count plus a key hash (cheap, and points at the keys).",
+	},
+	{
+		step: 'Decision',
+		text: 'Fingerprint each table and company code by row count plus key hash, over the full history and the last 30 days.',
+	},
+	{
+		step: "How we'd know",
+		text: 'Drift is classified in both directions, a drill-down dashboard goes from a table to the exact keys, and the target is zero difference. A row whose key landed but whose values differ would still pass; that needs a value hash too.',
 	},
 ];
 
@@ -115,13 +159,13 @@ const mapping = [
 	],
 ];
 
-// Intent, not results: each item names the habit above it comes from.
+// Intent, not results: each item names the habit it comes from.
 const firstNinety = [
-	{ text: 'Learn your pipeline end to end and write down what I find, so the next person starts with a map.', from: 'keep-up', habit: 'the DR playbook and runbooks' },
-	{ text: 'Find the one alert people ignore, then fix it or retire it.', from: 'keep-up', habit: 'the noisy queue-depth alert' },
-	{ text: 'Walk your recovery path, a restore or a DR runbook, before anyone needs it.', from: 'keep-up', habit: 'DR exercises' },
-	{ text: 'Pick one feed that matters and check that it reconciles, read-only first.', from: 'change-safely', habit: 'zero-difference reconciliation' },
-	{ text: 'Ship one small change through your normal path to production, to learn how changes land.', from: 'change-safely', habit: 'the non-prod-to-prod sequence' },
+	{ text: "Map the constraints before proposing anything: what can't change, what must stay read-only, what already exists to reuse.", href: '#design', habit: 'how I design' },
+	{ text: 'Learn your pipeline end to end and write down what I find, so the next person starts with a map.', href: '#keep-up', habit: 'the DR playbook and runbooks' },
+	{ text: 'Pick one feed that matters and check that it reconciles, read-only first.', href: '#design', habit: 'the read-only reconciliation engine' },
+	{ text: 'Find the one alert people ignore, then fix it or retire it.', href: '#keep-up', habit: 'the noisy queue-depth alert' },
+	{ text: 'Write one decision record for a choice the team is about to make, so the why outlives the meeting.', href: url('decisions/'), habit: 'my decision log' },
 ];
 
 const titles = new Map((await getStories()).map((s) => [s.id, s.data.title]));
@@ -129,11 +173,12 @@ const titles = new Map((await getStories()).map((s) => [s.id, s.data.title]));
 const testimonials = existsSync('content/testimonials.yaml') ? await getCollection('testimonials' as never) : [];
 ---
 
-<Base title="Working with me" description="How I keep data platforms up, change them safely and raise the bar on a team, with links to the evidence.">
+<Base title="How I'd work on your team" description="How I design data systems from their constraints, ship change safely, keep them running and raise the bar on a team, with links to the evidence.">
 	<p class="eyebrow">Working with me</p>
-	<h1>How I'd contribute to your team</h1>
+	<h1>How I'd work on your team</h1>
 	<p class="lede">
-		Where I've written up the work as a story, the line links to it, so this page doubles as an index into the evidence.
+		I design data systems from their constraints, build them so they hold up, and write down why. Where I've written up the
+		work, the line links to it.
 	</p>
 
 	{
@@ -141,16 +186,18 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 			<section aria-labelledby={s.id}>
 				<p class="kicker">{s.caption}</p>
 				<h2 id={s.id}>{s.title}</h2>
-				<ul class="claims">
+				<ul class:list={["claims", { pairs: s.claims.length === 4 }]}>
 					{s.claims.map((c) => (
 						<li class="card">
 							<p class="label">{c.label}</p>
-							<p>{c.text}</p>
-							{c.explainer && (
+							<p>
+								<Gloss text={c.text} seen={seen} />
+							</p>
+							{c.links?.map((l) => (
 								<p class="story">
-									<a href={url(c.explainer.href)}>{c.explainer.text} →</a>
+									<a href={url(l.href)}>{l.text} →</a>
 								</p>
-							)}
+							))}
 							{c.story && titles.has(c.story) && (
 								<p class="story">
 									<a href={url(`stories/${c.story}/`)}>
@@ -190,6 +237,34 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 		</table>
 	</section>
 
+	<section aria-labelledby="your-problem">
+		<p class="kicker">How I'd approach it</p>
+		<h2 id="your-problem">Bring me your problem</h2>
+		<p class="note">
+			A sample problem: <strong>three databases disagree and nobody trusts the dashboard.</strong> Here is how I'd work
+			through it, based on the reconciliation engine I built as a proof of concept.
+		</p>
+		<ol class="plan method">
+			{
+				method.map((m, i) => (
+					<li class="card">
+						<span class="step" aria-hidden="true">
+							{String(i + 1).padStart(2, '0')}
+						</span>
+						<div>
+							<p class="label">{m.step}</p>
+							<p>{m.text}</p>
+						</div>
+					</li>
+				))
+			}
+		</ol>
+		<p class="note more">
+			<a href={url('reconciliation/')}>See it work: the reconciliation explainer →</a>
+			<a href={url('designs/reconciliation-engine/')}>Read the design →</a>
+		</p>
+	</section>
+
 	<section aria-labelledby="first-90">
 		<p class="kicker">Intent, not a track record</p>
 		<h2 id="first-90">What I'd do in my first 90 days on your team</h2>
@@ -204,7 +279,7 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 						<div>
 							<p>{p.text}</p>
 							<p class="from">
-								habit: <a href={`#${p.from}`}>{p.habit}</a>
+								habit: <a href={p.href}>{p.habit}</a>
 							</p>
 						</div>
 					</li>
@@ -234,9 +309,9 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 
 	<section class="contact card card-lg" aria-labelledby="contact">
 		<h2 id="contact">Let's talk</h2>
-		<p>If your data platform needs to be more reliable, I'd like to hear about it.</p>
+		<p>If your team needs a data system designed, built, and trusted, I'd like to hear about it.</p>
 		<p class="links">
-			<a class="btn btn-primary" href="mailto:sricharan23@gmail.com">sricharan23@gmail.com</a>
+			<a class="btn btn-primary" href="mailto:sricharan23@gmail.com">Email</a>
 			<a class="btn" href="https://linkedin.com/in/charansri">LinkedIn →</a>
 		</p>
 	</section>
@@ -258,7 +333,7 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 	.kicker {
 		margin: 0;
 		color: var(--accent);
-		font-size: 0.875rem;
+		font-size: var(--text-sm);
 		font-weight: 600;
 		letter-spacing: 0.01em;
 	}
@@ -281,6 +356,10 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 	.claims {
 		grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
 	}
+	/* four cards read as 2 x 2 instead of 3 + an orphan */
+	.claims.pairs {
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+	}
 	.claims .card {
 		display: flex;
 		flex-direction: column;
@@ -290,7 +369,7 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 	.label {
 		margin: 0;
 		color: var(--muted);
-		font-size: 0.8125rem;
+		font-size: var(--text-xs);
 		font-weight: 600;
 		letter-spacing: 0.01em;
 	}
@@ -303,8 +382,12 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 	.claims .story {
 		margin-top: auto;
 		padding-top: 1rem;
-		font-size: 0.9375rem;
+		font-size: var(--text-sm);
 		font-weight: 600;
+	}
+	.claims .story + .story {
+		margin-top: 0;
+		padding-top: 0.5rem;
 	}
 	.note {
 		max-width: var(--measure);
@@ -320,12 +403,19 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 		padding: 1.25rem 1.5rem;
 		box-shadow: var(--shadow-sm);
 	}
+	.more {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem 1.5rem;
+		margin-top: 1.25rem;
+		font-weight: 600;
+	}
 	.plan .card p:first-child {
 		margin-top: 0;
 	}
 	.step {
 		color: var(--accent);
-		font-size: 1.5rem;
+		font-size: var(--text-xl);
 		font-weight: 700;
 		line-height: 1.1;
 		letter-spacing: -0.02em;
@@ -333,7 +423,7 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 	}
 	.from {
 		color: var(--muted);
-		font-size: 0.875rem;
+		font-size: var(--text-sm);
 	}
 	.map {
 		width: 100%;
@@ -341,7 +431,7 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 		border-collapse: separate;
 		border-spacing: 0;
 		overflow: hidden;
-		font-size: 0.9375rem;
+		font-size: var(--text-sm);
 	}
 	.map th,
 	.map td {
@@ -355,7 +445,7 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 	}
 	.map thead th {
 		color: var(--muted);
-		font-size: 0.8125rem;
+		font-size: var(--text-xs);
 		font-weight: 600;
 		letter-spacing: 0.01em;
 	}

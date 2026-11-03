@@ -1,0 +1,367 @@
+---
+// Fig. 3: the one-bad-message incident, step by step (data in src/lib/incident.ts). Lives on that story's page.
+// Without JS the steps render as a static timeline. With JS: one step at a time, a five-stage row that lights up
+// (sticky under the header on narrow screens), Prev/Next (no wrap), arrows, Escape, optional Play.
+import { stages, corruptSource } from '../lib/stages';
+import { incidentSteps } from '../lib/incident';
+const corruptLines = corruptSource.split('\n');
+---
+
+<figure class="incident" data-incident>
+	<figcaption class="eyebrow">Incident replay: one bad message</figcaption>
+	<p class="intro">
+		The same incident, step by step: one corrupt message made the splitter reject tens of thousands of messages. Here is how
+		it was caught and how the data was recovered.
+	</p>
+	<button class="start btn btn-primary" type="button" data-replay hidden>Watch one bad message break the pipeline (7 steps)</button>
+	<ol class="strip card" aria-hidden="true" hidden>
+		{
+			stages.map((s, i) => (
+				<li data-stage>
+					<span class="num">{i + 1}</span>
+					<span class="name">{s.label}</span>
+				</li>
+			))
+		}
+	</ol>
+	<div class="controls" data-icontrols hidden>
+		<button class="btn" type="button" data-istep="-1">← Prev</button>
+		<span class="count" data-icount aria-hidden="true">1 / {incidentSteps.length}</span>
+		<button class="btn" type="button" data-istep="1">Next →</button>
+		<button class="btn" type="button" data-play hidden>Play</button>
+		<button class="btn" type="button" data-exit>Exit replay</button>
+	</div>
+	<p class="sr-only" aria-live="polite" data-live></p>
+	<ol class="steps" data-steps>
+		{
+			incidentSteps.map((st, i) => (
+				<li class="card" data-step-item data-at={st.at} data-lit={(st.lit ?? [st.at]).join(' ')} data-error={st.error ? '' : undefined}>
+					<header>
+						<span class="num" aria-hidden="true">{i + 1}</span>
+						<h3>{st.title}</h3>
+					</header>
+					<p>{st.caption}</p>
+					{st.show === 'corrupt' && (
+						<pre tabindex="0" aria-label="The corrupt Source record, with its uneven line breaks marked">{corruptLines.map((l, j) => (j < corruptLines.length - 1 ? [l, <mark>⏎</mark>, '\n'] : l))}</pre>
+					)}
+					{st.backlog && (
+						<div class={`backlog is-${st.backlog}`}>
+							<span class="bar" aria-hidden="true"><span /></span>
+							<span>{st.backlog === 'drain' ? 'backlog drained: clean copies landed in Oracle' : 'tens of thousands of messages rejected'}</span>
+						</div>
+					)}
+					{st.show === 'alert' && <pre class="alert">ALERT  missing rows: order_line not landing in Oracle</pre>}
+					{st.show === 'keys' && (
+						<pre>{`affected keys (order_id/line_no)
+4471/2
+4471/3
+5502/1
+…
+→ fed back to the mainframe for regeneration`}</pre>
+					)}
+				</li>
+			))
+		}
+	</ol>
+</figure>
+
+<script>
+	import { onPage } from '../lib/stepper';
+	import { enter, type Spring } from '../lib/spring';
+
+	onPage((signal) => {
+		for (const root of document.querySelectorAll<HTMLElement>('[data-incident]')) {
+			const boxes = [...root.querySelectorAll<HTMLElement>('[data-stage]')];
+			const row = root.querySelector<HTMLElement>('.strip')!;
+			const steps = [...root.querySelectorAll<HTMLElement>('[data-step-item]')];
+			const stepList = root.querySelector<HTMLElement>('[data-steps]')!;
+			const startBtn = root.querySelector<HTMLButtonElement>('[data-replay]')!;
+			const controls = root.querySelector<HTMLElement>('[data-icontrols]')!;
+			const count = root.querySelector<HTMLElement>('[data-icount]')!;
+			const live = root.querySelector<HTMLElement>('[data-live]')!;
+			const playBtn = root.querySelector<HTMLButtonElement>('[data-play]')!;
+			const prev = controls.querySelector<HTMLButtonElement>('[data-istep="-1"]')!;
+			const next = controls.querySelector<HTMLButtonElement>('[data-istep="1"]')!;
+			const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+			let step = -1; // -1 = not replaying
+			let timer = 0;
+			let anim: Spring | undefined;
+
+			const paint = (lit: number[], error: boolean) =>
+				boxes.forEach((b, j) => {
+					b.classList.toggle('is-on', lit.includes(j));
+					b.classList.toggle('is-error', error && j === 2);
+				});
+			const stopPlay = () => {
+				clearInterval(timer);
+				timer = 0;
+				playBtn.textContent = 'Play';
+			};
+			const go = (k: number) => {
+				const was = step;
+				step = Math.max(0, Math.min(steps.length - 1, k));
+				anim?.stop();
+				steps.forEach((s, j) => {
+					s.hidden = j !== step;
+					s.style.opacity = s.style.transform = '';
+				});
+				if (step !== was) anim = enter(steps[step], was < 0 ? 0 : Math.sign(step - was), reduced.matches);
+				const d = steps[step].dataset;
+				paint(d.lit ? d.lit.split(' ').map(Number) : [], 'error' in d);
+				count.textContent = `${step + 1} / ${steps.length}`;
+				// no wrap at the ends; a button that loses its use hands focus to the other one
+				const f = document.activeElement;
+				prev.disabled = step === 0;
+				next.disabled = step === steps.length - 1;
+				if ((f === prev || f === next) && f.disabled) (f === prev ? next : prev).focus();
+				live.textContent = `Incident step ${step + 1} of ${steps.length}: ${steps[step].querySelector('h3')!.textContent}`;
+				if (step === steps.length - 1) stopPlay();
+			};
+			const exit = () => {
+				if (step < 0) return;
+				stopPlay();
+				step = -1;
+				root.classList.remove('in-replay');
+				stepList.hidden = controls.hidden = row.hidden = true;
+				startBtn.hidden = false;
+				paint([], false);
+				live.textContent = 'Replay closed.';
+				startBtn.focus();
+			};
+
+			startBtn.hidden = false;
+			stepList.hidden = true;
+			const syncPlay = () => (playBtn.hidden = reduced.matches);
+			syncPlay();
+			reduced.addEventListener('change', () => (stopPlay(), syncPlay()), { signal });
+			signal.addEventListener('abort', () => (stopPlay(), anim?.stop()));
+
+			startBtn.addEventListener('click', () => {
+				root.classList.add('in-replay');
+				startBtn.hidden = true;
+				stepList.hidden = controls.hidden = row.hidden = false;
+				go(0);
+				next.focus();
+			});
+			for (const b of [prev, next]) b.addEventListener('click', () => (stopPlay(), go(step + Number(b.dataset.istep))));
+			root.querySelector('[data-exit]')!.addEventListener('click', exit);
+			playBtn.addEventListener('click', () => {
+				if (timer) return stopPlay();
+				if (reduced.matches) return;
+				if (step === steps.length - 1) go(0);
+				playBtn.textContent = 'Pause';
+				timer = window.setInterval(() => go(step + 1), 2000);
+			});
+			root.addEventListener('keydown', (e) => {
+				// leave arrows alone inside scrollable record boxes
+				if (step < 0 || e.altKey || e.ctrlKey || e.metaKey || (e.target as HTMLElement).closest('pre')) return;
+				if (e.key === 'Escape') return exit();
+				if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+				e.preventDefault();
+				stopPlay();
+				go(step + (e.key === 'ArrowRight' ? 1 : -1));
+			});
+		}
+	});
+</script>
+
+<style>
+	.incident {
+		position: relative;
+		max-width: var(--measure);
+		margin: var(--space-12) 0 0;
+	}
+	figcaption {
+		margin-bottom: var(--space-2);
+	}
+	.intro {
+		margin: 0 0 var(--space-5);
+	}
+	mark {
+		padding: 0 0.15em;
+		border-radius: 0.2em;
+		background: color-mix(in srgb, var(--accent) 18%, transparent);
+		color: inherit;
+		box-shadow: inset 0 -2px 0 var(--accent);
+	}
+	.num {
+		display: grid;
+		place-items: center;
+		flex: none;
+		width: 1.75rem;
+		height: 1.75rem;
+		border-radius: 50%;
+		background: var(--fill-strong);
+		color: var(--ink);
+		font-size: var(--text-xs);
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+	.start[hidden],
+	.controls[hidden],
+	.strip[hidden],
+	.steps[hidden],
+	.steps li[hidden] {
+		display: none;
+	}
+	.controls {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-2);
+		margin-bottom: var(--space-4);
+	}
+	.count {
+		min-width: 3.25rem;
+		color: var(--muted);
+		font-size: var(--text-sm);
+		font-variant-numeric: tabular-nums;
+		text-align: center;
+	}
+
+	/* the five stages, lit by the replay; on narrow screens it pins under the sticky header.
+	   Solid surface: it rides under the translucent header, and translucent on translucent loses legibility. */
+	.strip {
+		display: flex;
+		justify-content: space-between;
+		gap: var(--space-2);
+		margin: 0 0 var(--space-4);
+		padding: var(--space-2) var(--space-3);
+		border-radius: 999px;
+		box-shadow: var(--shadow-sm);
+		list-style: none;
+	}
+	.strip li {
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+		padding-right: var(--space-3);
+		border-radius: 999px;
+		color: var(--muted);
+		font-size: var(--text-xs);
+		font-weight: 600;
+		transition: var(--theme-ease);
+	}
+	.strip li.is-on {
+		background: var(--tint);
+		color: var(--ink);
+	}
+	.strip li.is-on .num {
+		background: var(--accent-fill);
+		color: var(--on-accent);
+	}
+	.strip li.is-error {
+		background: var(--error-bg);
+		color: var(--error);
+	}
+	.strip li.is-error .num {
+		background: var(--error);
+		color: var(--surface);
+	}
+	@media (max-width: 56rem) {
+		.strip {
+			position: sticky;
+			top: calc(var(--header-h) + var(--space-2));
+			z-index: 5;
+			box-shadow: var(--shadow-lg);
+		}
+		.strip li {
+			padding-right: 0;
+		}
+		.strip .name {
+			display: none;
+		}
+	}
+
+	.steps {
+		display: grid;
+		gap: var(--space-4);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.steps li {
+		min-width: 0;
+		padding: var(--space-5) var(--space-6) var(--space-6);
+		box-shadow: var(--shadow-sm);
+	}
+	.steps header {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+	}
+	.steps h3 {
+		margin: 0;
+		font-size: var(--text-md);
+	}
+	.steps p {
+		margin: var(--space-2) 0 0;
+	}
+	pre {
+		margin: var(--space-4) 0 0;
+		padding: var(--space-4) var(--space-5);
+		overflow-x: auto;
+		border-radius: var(--radius);
+		background: var(--code-bg);
+		font-size: var(--text-xs);
+		line-height: 1.6;
+	}
+	pre.alert {
+		background: var(--error-bg);
+		color: var(--error);
+		font-weight: 600;
+		white-space: pre-wrap;
+	}
+	.backlog {
+		display: grid;
+		gap: var(--space-2);
+		margin-top: var(--space-4);
+		color: var(--muted);
+		font-size: var(--text-sm);
+	}
+	.backlog .bar {
+		display: block;
+		max-width: 24rem;
+		height: 0.625rem;
+		overflow: hidden;
+		border: 1px solid var(--error);
+		border-radius: 999px;
+	}
+	.backlog .bar span {
+		display: block;
+		height: 100%;
+		background: var(--error);
+		transform-origin: left;
+	}
+	.backlog.is-drain .bar {
+		border-color: var(--accent);
+	}
+	.backlog.is-drain .bar span {
+		background: var(--accent);
+		transform: scaleX(0);
+	}
+	.in-replay .backlog.is-grow .bar span {
+		animation: grow 1.6s cubic-bezier(0.25, 1, 0.5, 1);
+	}
+	.in-replay .backlog.is-drain .bar span {
+		animation: drain 1.6s cubic-bezier(0.5, 0, 0.75, 0);
+	}
+	@keyframes grow {
+		from {
+			transform: scaleX(0.06);
+		}
+	}
+	@keyframes drain {
+		from {
+			transform: scaleX(1);
+		}
+	}
+	@media (max-width: 40rem) {
+		.steps li {
+			padding: var(--space-4) var(--space-4) var(--space-5);
+		}
+		pre {
+			padding: var(--space-3) var(--space-4);
+		}
+	}
+</style>

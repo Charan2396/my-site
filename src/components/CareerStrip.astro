@@ -1,6 +1,6 @@
 ---
 // Every phrase restates content/resume.md (Experience and Education). Dates are the resume's.
-import { url } from '../lib/url';
+// No links here: the hero has Resume, and Projects is in the nav.
 const rows = [
 	{
 		when: '2020–21',
@@ -42,8 +42,6 @@ const rows = [
 	</ol>
 	<p class="foot">
 		M.S. Computer Science and Engineering, University at Buffalo
-		<a href={url('projects/simple-dynamo/')}>Simple Dynamo ring →</a>
-		<a href={url('resume/')}>Full history on the resume →</a>
 	</p>
 </section>
 
@@ -79,7 +77,7 @@ const rows = [
 		flex-direction: column;
 		gap: 0.25rem;
 		padding-top: 1.5rem;
-		font-size: 0.9375rem;
+		font-size: var(--text-sm);
 		line-height: 1.5;
 	}
 	li::before {
@@ -98,13 +96,13 @@ const rows = [
 	}
 	.when {
 		color: var(--muted);
-		font-size: 0.8125rem;
+		font-size: var(--text-xs);
 		font-weight: 600;
 		letter-spacing: 0.01em;
 		font-variant-numeric: tabular-nums;
 	}
 	.org {
-		font-size: 1.1875rem;
+		font-size: var(--text-lg);
 		font-weight: 600;
 		letter-spacing: -0.01em;
 	}
@@ -120,7 +118,7 @@ const rows = [
 		gap: 0.25rem 1.5rem;
 		margin: 1.75rem 0 0;
 		color: var(--muted);
-		font-size: 0.875rem;
+		font-size: var(--text-sm);
 	}
 	@media (max-width: 48rem) {
 		ol {

@@ -1,0 +1,51 @@
+# Decision log, numbered ADR style (ids sort the page). Each field restates content/resume.md (or a story that does); no invented options or numbers.
+- id: adr-01
+  title: 'Store-and-forward on existing infrastructure'
+  context: 'A warehouse integration carried planned-downtime exposure, and a warehouse depends on its messages arriving.'
+  decision: 'Co-designed a store-and-forward IBM MQ architecture (messages are stored along the way and forwarded when the destination is ready), reusing existing infrastructure.'
+  consequence: 'Planned-downtime exposure for the integration dropped by over 90 percent.'
+  related: ['/designs/store-and-forward/']
+- id: adr-02
+  title: 'JSON on Pub/Sub for cloud consumers'
+  context: 'Raw mainframe CDC messages are not a format cloud consumers can pick up directly.'
+  decision: 'A co-built, real-time Java broker converts raw CDC messages into JSON and publishes them to Google Cloud Pub/Sub.'
+  consequence: 'Downstream teams consume the messages into AlloyDB and BigQuery.'
+  related: ['/designs/cdc-pubsub-broker/']
+- id: adr-03
+  title: 'Reconciliation stays read-only'
+  context: 'Three Oracle instances can drift apart: rows go missing, and deletes fail to propagate.'
+  decision: 'The reconciliation engine is read-only. It fingerprints each table and company code and classifies drift in both directions; it does not change data.'
+  consequence: 'It caught a flawed key heuristic before it produced false drift, and surfaced stale rows left by deletes that never propagated. It is a proof of concept, in use for validation.'
+  related: ['/designs/reconciliation-engine/', '/reconciliation/']
+- id: adr-04
+  title: 'Regenerate from the source, not hand-patch'
+  context: 'Records sometimes failed to land in Oracle, and recovery was manual and Perl-based. Once, a single corrupt message made a splitter reject tens of thousands of messages.'
+  decision: 'Rebuilt self-healing repair as idempotent shell automation: it detects the records that failed to land, captures their keys and resends them to the mainframe, which regenerates them.'
+  consequence: 'The manual, Perl-based recovery was replaced, and the rejected data was regenerated from the source of truth instead of being hand-edited.'
+  related: ['/stories/one-bad-message/']
+- id: adr-05
+  title: 'Group-governed Active Directory access for MQ'
+  context: 'IBM MQ access depended on per-host local accounts.'
+  decision: 'Designed and validated an Active Directory (SSSD/PAM) authentication model with group-governed access and least-privilege authority.'
+  consequence: 'Per-host local accounts are removed.'
+  related: ['/designs/ad-auth-mq/']
+- id: adr-06
+  title: 'Secrets first in the cron-to-Airflow move'
+  context: 'A ~75-job cron estate (shell reporting and Oracle table-maintenance jobs) is moving to Apache Airflow.'
+  decision: 'Phase one is a secrets-first Git migration.'
+  consequence: 'In progress: a working proof of concept covers a small set of jobs; the full migration is not complete.'
+- id: adr-07
+  title: 'An on-premises LLM, no cloud dependency'
+  context: 'Platform health is tracked in live observability metrics (Datadog and custom DogStatsD health metrics).'
+  decision: 'Ollama with a 3.8B open-source model turns live observability metrics into plain-English platform health summaries, with no cloud dependency.'
+  consequence: 'A proof of concept, accompanied by a 16-item AI opportunity roadmap.'
+- id: adr-08
+  title: 'Non-production before production for MQ upgrades'
+  context: 'In the IBM MQ upgrade lifecycle for a multi-environment platform, a client-compatibility defect led to a controlled rollback and cold restore.'
+  decision: 'Established a non-production-to-production upgrade sequence.'
+- id: adr-09
+  title: 'Idempotent, guarded backfills'
+  context: 'About 16,900 order-line records were missing across 23 company codes, and a purge of parent rows needed sizing.'
+  decision: 'Built backfill and purge tooling with idempotent inserts, cascade guards and zero-difference reconciliation.'
+  consequence: 'It recovered ~16,900 missing order-line records across 23 company codes and sized a purge of hundreds of thousands of parent rows.'
+  related: ['/stories/backfill-16900/']

@@ -12,18 +12,35 @@ ok(r.status() === 200, `/working-with-me/ ${r.status()}`);
 const cur = await p.$$eval('nav a[aria-current="page"]', (as) => as.map((a) => a.textContent.trim()));
 ok(cur.length === 1 && cur[0] === 'Working with me', `aria-current [${cur}]`);
 const nav = await p.$$eval('nav[aria-label="Main"] a', (as) => as.map((a) => a.textContent.trim()));
-ok(nav.join('|') === 'Working with me|Projects|Resume', `nav order ${nav}`);
+ok(nav.includes('Working with me'), `nav has Working with me: ${nav}`);
 ok(!(await p.content()).includes('Every claim below comes from'), 'no meta "every claim" sentence');
 const map = await p.$$eval('#other-names ~ table tbody tr', (r) => r.map((x) => x.querySelector('th').textContent.trim()));
 ok(map.length === 6 && map[0].startsWith('Mainframe CDC'), `mapping table: ${map.length} rows`);
 ok((await p.textContent('#other-names')) === 'If your stack looks different', 'mapping heading');
 ok(await p.locator('.claims a[href="/my-site/reconciliation/"]').count() === 1, 'reconciliation card links the explainer');
+ok((await p.textContent('h1')) === "How I'd work on your team", 'h1');
+ok((await p.title()).startsWith("How I'd work on your team"), 'title');
+const h2s = await p.$$eval('main section > h2', (h) => h.map((x) => x.textContent.trim()));
+const four = ['How I design', 'How I ship change safely', 'How I keep it running', 'How I raise the bar'];
+ok(JSON.stringify(h2s.slice(0, 4)) === JSON.stringify(four), `four section h2s in order: ${h2s.slice(0, 4)}`);
+ok(await p.locator('#keep-up ~ ul.claims > li').count() === 4, 'keep it running: 4 cards');
+ok(h2s.indexOf('Bring me your problem') !== -1 && h2s.indexOf('Bring me your problem') < h2s.indexOf('What I\'d do in my first 90 days on your team'), 'problem section before the 90-day plan');
+const steps = await p.$$eval('#your-problem ~ ol > li .label', (l) => l.map((x) => x.textContent.trim()));
+ok(steps.join('|') === "Clarify|Constraints|Options|Decision|How we'd know", `method: 5 steps (${steps})`);
+const prob = await p.$$eval('#your-problem ~ * a', (as) => as.map((a) => a.getAttribute('href')));
+ok(prob.includes('/my-site/reconciliation/') && prob.includes('/my-site/designs/reconciliation-engine/'), `problem links: ${prob}`);
+ok((await p.textContent('#your-problem ~ .note')).includes('proof of concept'), 'problem labelled as a proof-of-concept approach');
+const plan = await p.$$eval('#first-90 ~ ol > li .from a', (as) => as.map((a) => a.getAttribute('href')));
+ok(plan.length === 5 && plan.filter((h) => h === '#design' || h === '/my-site/decisions/').length >= 2, `90-day plan: 5 items, >=2 design/decision links (${plan})`);
+ok((await p.textContent('#contact ~ p')).trim() === "If your team needs a data system designed, built, and trusted, I'd like to hear about it.", 'closing line');
 ok((await p.$$('h1')).length === 1, 'one h1');
 ok((await p.$$('#testimonials')).length === 0, 'no testimonials section without file');
 const links = [...new Set(await p.$$eval('main a[href]', (as) => as.map((a) => a.href)))];
 const internal = links.filter((u) => u.startsWith(base));
 const stories = internal.filter((u) => u.includes('/stories/'));
-ok(stories.length === 6, `links to 6 stories (${stories.length})`);
+ok(stories.length === 4, `links to 4 stories (${stories.length})`);
+ok(!internal.some((u) => /\/stories\/(pubsub-broker|store-and-forward)\//.test(u)), 'no links to deleted stories');
+for (const d of ['cdc-pubsub-broker', 'store-and-forward', 'ems-mq-migration', 'reconciliation-engine', 'ad-auth-mq']) ok(internal.includes(`${base}designs/${d}/`), `links /designs/${d}/`);
 for (const u of internal) {
   if (u.includes('#')) { const id = u.split('#')[1]; ok(await p.$(`#${id}`) !== null, `anchor #${id} exists`); continue; }
   const s = (await p.request.get(u)).status(); ok(s === 200, `${u} ${s}`);
@@ -40,10 +57,10 @@ for (const [w, h, scheme] of [[1280, 900, 'light'], [1280, 900, 'dark'], [820, 1
     ok(sw <= w, `no overflow /${path} ${w} ${scheme} (${sw})`);
   }
   if (w === 1280 && scheme === 'light') {
-    await q.goto(base + 'working-with-me/'); await q.screenshot({ path: OUT + 'p3-wwm-1280-light.png', fullPage: true });
+    await q.goto(base + 'working-with-me/'); await q.screenshot({ path: OUT + 'w1-wwm-1280-light.png', fullPage: true });
     await q.goto(base); await q.waitForTimeout(1200); await q.screenshot({ path: OUT + 'p3-home-1280-light.png' });
   }
-  if (w === 390 && scheme === 'dark') { await q.goto(base + 'working-with-me/'); await q.screenshot({ path: OUT + 'p3-wwm-390-dark.png', fullPage: true }); }
+  if (w === 390 && scheme === 'dark') { await q.goto(base + 'working-with-me/'); await q.screenshot({ path: OUT + 'w1-wwm-390-dark.png', fullPage: true }); }
   await q.close();
 }
 
@@ -70,8 +87,7 @@ ok((await p.textContent('.subtitle')) === 'Senior Data Platform Engineer · 6+ y
 const hero = await p.$$eval('main .contact a', (as) => as.map((a) => `${a.textContent}=${a.getAttribute('href')}`));
 ok(hero.join(' ') === 'Email=mailto:sricharan23@gmail.com LinkedIn=https://linkedin.com/in/charansri Resume=/my-site/resume/', `hero contact links: ${hero}`);
 ok((await p.textContent('h2.tagline')) === 'The pipeline is the portfolio.', 'tagline above fig. 1');
-const more = await p.$$eval('.more a', (as) => as.map((a) => a.getAttribute('href')));
-ok(more.join(' ') === '/my-site/reconciliation/ /my-site/projects/simple-dynamo/', `more to explore: ${more}`);
+ok((await p.$$('.more')).length === 0 && !(await p.textContent('main')).includes('More to explore'), 'no "More to explore" row on home (Projects covers it)');
 // impact grid: 2 x 2 at 820, 4 across at 1280
 for (const [w, cols] of [[820, 2], [1280, 4]]) {
   await p.setViewportSize({ width: w, height: 900 });

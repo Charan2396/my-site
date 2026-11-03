@@ -9,12 +9,12 @@ const text = (p, s) => p.$eval(s, (e) => e.textContent.replace(/\s+/g, ' ').trim
 // hero + career strip
 let p = await b.newPage({ viewport: { width: 1280, height: 900 }, colorScheme: 'light', reducedMotion: 'reduce' });
 await p.goto(base);
-ok((await text(p, '.lede')).startsWith('I own correctness for a real-time change-data-capture backbone'), 'hero positioning sentence');
+ok((await text(p, '.lede')).startsWith('I design and build data systems that move change data off legacy platforms'), 'hero positioning sentence');
 const rows = await p.$$eval('.career li', (l) => l.map((x) => x.textContent.replace(/\s+/g, ' ').trim()));
 ok(rows.length === 3 && rows[0].startsWith('2020–21') && rows[0].includes('Amazon') && rows[2].includes('Ingram Micro'), `career strip rows: ${rows.length}`);
-ok((await p.locator('.career a[href="/my-site/resume/"]').count()) === 1, 'career strip links the resume');
+ok((await p.locator('.career a').count()) === 0, 'career strip: no links (Resume is in the hero, Projects in the nav)');
 ok(await p.$eval('.career', (c) => { const s = document.querySelector('.impact .stack'), h = document.querySelector('h2.tagline'); return !!(s.compareDocumentPosition(c) & 4) && !!(c.compareDocumentPosition(h) & 4); }), 'career strip between Stack line and tagline');
-ok((await p.$$('.stories li p')).length === 0, 'home story list: titles only');
+ok((await p.$$('.held li p')).length === 0, 'home story list: titles only');
 await p.screenshot({ path: OUT + 'r2-home-1280-light-top.png' });
 await p.locator('.career').screenshot({ path: OUT + 'r2-home-1280-light-career.png' });
 // fig. 2: base64 decodes to the JSON shown; MERGE guard
@@ -41,7 +41,7 @@ await p.close();
 p = await b.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'light', reducedMotion: 'reduce' });
 await p.goto(base);
 ok(await p.$$eval('.pipeline .detail', (d) => d.every((x) => getComputedStyle(x).display === 'none')), 'fig. 1 detail hidden at 390');
-ok((await p.$$('.pipeline a.cta')).length === 5, 'fig. 1 story links kept at 390');
+ok((await p.$$('.pipeline a.cta:not(.also)')).length === 5 && (await p.isVisible('.pipeline a.cta.also[href$="/stories/log-runaway/"]')), 'fig. 1: 5 stage links + the log-runaway link kept at 390');
 await p.screenshot({ path: OUT + 'r2-home-390-light-1.png' });
 await p.evaluate(() => scrollTo(0, 844)); await p.screenshot({ path: OUT + 'r2-home-390-light-2.png' });
 // stories eyebrow

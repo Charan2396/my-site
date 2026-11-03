@@ -1,4 +1,4 @@
-// Scripted replay of the one-bad-message incident (content/stories/one-bad-message.md), shown as fig. 3.
+// Scripted replay of the one-bad-message incident, shown as fig. 3 on that story's page (src/components/IncidentReplay.astro).
 // No numbers beyond the story's own: the backlog is shown as a shape, labelled "tens of thousands".
 // `at` = stage index the record token sits on; `lit` = stage boxes highlighted (defaults to [at]);
 // `error` = the Process box shows the rejecting state; `backlog` = state of the reject bar.
@@ -10,7 +10,7 @@ export const incidentSteps: {
 	lit?: number[];
 	error?: boolean;
 	backlog?: 'grow' | 'full' | 'drain';
-	show?: 'corrupt' | 'alert' | 'keys' | 'story';
+	show?: 'corrupt' | 'alert' | 'keys';
 }[] = [
 	{
 		title: 'A corrupt record enters at Source',
@@ -65,6 +65,5 @@ export const incidentSteps: {
 			'More alerts went in, plus a runbook for the different ways this failure shows up, so the next person does not need to have seen it before.',
 		at: 3,
 		lit: [],
-		show: 'story',
 	},
 ];

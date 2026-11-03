@@ -32,10 +32,6 @@ const checkHome = async (p, label) => {
   ok(v[0]?.startsWith('Store') && (await p.isVisible('text=MERGE INTO order_line')), `${label}: stage 4 shows Oracle sample`);
   await p.focus('[data-pick="3"]'); await p.keyboard.press('ArrowRight');
   ok((await visible(p))[0]?.startsWith('Consume'), `${label}: ArrowRight -> Consume`);
-  await p.click('[data-replay]');
-  await p.click('[data-istep="1"]'); await p.click('[data-istep="1"]');
-  ok((await p.textContent('[data-live]')).startsWith('Incident step 3 of 7') && (await p.evaluate(() => document.querySelectorAll('[data-stage]')[2].classList.contains('is-error'))), `${label}: replay reaches step 3 with error`);
-  await p.click('[data-exit]');
 };
 
 // (a) + (b)
@@ -52,6 +48,9 @@ await p.waitForURL('**/stories/one-bad-message/');
 await p.waitForSelector('article h1');
 ok((await p.evaluate(() => window.__marker)) === 'same-document', 'story reached by client-side navigation (no reload)');
 ok((await p.textContent('article h1')).length > 0, `story h1: "${await p.textContent('article h1')}"`);
+// the replay works after a client-side navigation onto the story page
+await p.click('[data-replay]'); await p.click('[data-istep="1"]'); await p.click('[data-istep="1"]');
+ok((await p.textContent('[data-incident] [data-live]')).startsWith('Incident step 3 of 7') && (await p.evaluate(() => document.querySelectorAll('[data-incident] [data-stage]')[2].classList.contains('is-error'))), 'story (client nav): replay reaches step 3 with error');
 ok((await p.evaluate(() => window.__resize)) === 0, `resize listener released on the story page: ${await p.evaluate(() => window.__resize)}`);
 await p.goBack(); await p.waitForURL(base);
 ok((await p.evaluate(() => window.__marker)) === 'same-document', 'back is client-side too');
@@ -81,8 +80,8 @@ const names = await p.$$eval('[data-stage]', (els) => els.map((e) => e.hasAttrib
 ok(JSON.stringify(names) === JSON.stringify(['stage-source', 'stage-queue', 'stage-process', 'stage-store', 'stage-consume']), `home boxes carry view-transition-name: ${names}`);
 await ctx.close();
 const sp = await b.newPage();
-for (const [slug, stage] of [['one-bad-message', 'source'], ['store-and-forward', 'queue'], ['splitter-30-seconds', 'process'], ['log-runaway', 'process'], ['backfill-16900', 'store'], ['pubsub-broker', 'consume']]) {
-  await sp.goto(`${base}stories/${slug}/`);
+for (const [slug, stage] of [['stories/one-bad-message', 'source'], ['designs/store-and-forward', 'queue'], ['stories/splitter-30-seconds', 'process'], ['stories/log-runaway', 'process'], ['stories/backfill-16900', 'store'], ['designs/reconciliation-engine', 'store'], ['designs/cdc-pubsub-broker', 'consume']]) {
+  await sp.goto(`${base}${slug}/`);
   const vt = await sp.$$eval('[data-astro-transition-scope]', (els) => els.map((e) => getComputedStyle(e).viewTransitionName));
   ok(vt.length === 1 && vt[0] === `stage-${stage}`, `${slug} header: ${vt}`);
 }
@@ -141,33 +140,34 @@ ok(vis.length === 13 && vis.every((v) => v === '1|none|none'), `no JS: 5 cards +
 ok((await z.$$('.packet')).length === 0, 'no JS: no packets');
 await nj.close();
 
-// (e) sticky strip at 390
+// (e) sticky stage row at 390, on the one-bad-message story (the replay lives there)
 const s = await b.newPage({ viewport: { width: 390, height: 844 } });
-await s.goto(base); await ready(s);
+await s.goto(base + 'stories/one-bad-message/'); await s.waitForSelector('[data-replay]:not([hidden])');
 ok(!(await s.isVisible('.strip')), 'strip hidden before replay');
 await s.click('[data-replay]'); await s.click('[data-istep="1"]'); await s.click('[data-istep="1"]');
 ok(await s.isVisible('.strip'), 'strip visible during replay at 390');
 const strip = () => s.$$eval('.strip li', (l) => l.map((x) => (x.classList.contains('is-error') ? 'E' : x.classList.contains('is-on') ? 'L' : '-')).join(''));
-ok((await strip())[2] === 'E', `strip mirrors step 3 error: ${await strip()}`);
-const mirror = await s.$$eval('[data-stage]', (l) => l.map((x) => (x.classList.contains('is-error') ? 'E' : x.classList.contains('is-on') ? 'L' : '-')).join(''));
-ok(mirror === (await strip()), `strip matches fig. 1: ${mirror}`);
-await s.evaluate(() => { const f = document.querySelector('.incident'); scrollTo(0, f.getBoundingClientRect().top + scrollY + 120); });
-// redesign: the header is sticky too, so the strip pins just below it, not at 0
+ok((await strip()) === '--E--', `strip mirrors step 3 (Process rejecting): ${await strip()}`);
+await s.click('[data-istep="1"]');
+ok((await strip()) === '--EL-', `strip mirrors step 4 (Process + Store lit): ${await strip()}`);
+await s.evaluate(() => { const f = document.querySelector('.incident'); scrollTo(0, f.getBoundingClientRect().top + scrollY + 200); });
+// the header is sticky too, so the strip pins just below it, not at 0
 const top = await s.evaluate(() => { const r = document.querySelector('.strip').getBoundingClientRect(); return [Math.round(r.top), Math.round(r.bottom), Math.round(document.querySelector('.site-header').getBoundingClientRect().bottom)]; });
 ok(top[0] >= top[2] && top[0] <= top[2] + 10 && top[1] < 844, `strip pinned below the sticky header after scrolling within fig. 3: ${top}`);
 await s.waitForTimeout(600); await s.screenshot({ path: OUT + 'p4-390-light-replay-step3.png' });
-await s.click('[data-istep="1"]'); await s.click('[data-istep="1"]'); await s.click('[data-istep="1"]');
+await s.click('[data-istep="1"]'); await s.click('[data-istep="1"]');
 ok(!(await strip()).includes('E'), `strip error clears at step 6: ${await strip()}`);
 await s.click('[data-exit]');
 ok(!(await s.isVisible('.strip')), 'strip hidden after exit');
 await s.setViewportSize({ width: 1280, height: 900 });
 await s.click('[data-replay]');
-ok(!(await s.isVisible('.strip')), 'strip hidden on wide screens');
+ok(await s.isVisible('.strip') && (await s.$eval('.strip', (e) => getComputedStyle(e).position)) === 'static', 'wide screens: the stage row shows in place, not sticky');
 await s.close();
 
 // (f) overflow on all pages
 const slugs = readdirSync(DIST + 'stories');
-const pages = ['', 'working-with-me/', 'projects/', 'projects/simple-dynamo/', 'reconciliation/', 'build-log/', 'resume/', ...slugs.map((x) => `stories/${x}/`)];
+const designs = readdirSync(DIST + 'designs').filter((x) => !x.includes('.'));
+const pages = ['', 'designs/', 'decisions/', ...designs.map((x) => `designs/${x}/`), 'working-with-me/', 'projects/', 'projects/simple-dynamo/', 'reconciliation/', 'build-log/', 'resume/', ...slugs.map((x) => `stories/${x}/`)];
 for (const [w, scheme] of [[390, 'light'], [390, 'dark'], [820, 'light'], [820, 'dark'], [1280, 'light'], [1280, 'dark']]) {
   const q = await b.newPage({ viewport: { width: w, height: 900 }, colorScheme: scheme });
   const bad = [];

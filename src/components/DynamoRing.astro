@@ -122,7 +122,7 @@ const state = (st: Scenario['steps'][number], port: string) =>
 		margin-bottom: 1rem;
 	}
 	figcaption .title {
-		font-size: 1.3125rem;
+		font-size: var(--text-lg);
 		font-weight: 700;
 		line-height: 1.2;
 		letter-spacing: -0.015em;
@@ -155,12 +155,12 @@ const state = (st: Scenario['steps'][number], port: string) =>
 		border-radius: 50%;
 		background: var(--accent-fill);
 		color: var(--on-accent);
-		font-size: 0.8125rem;
+		font-size: var(--text-xs);
 		font-weight: 600;
 	}
 	h3 {
 		margin: 0;
-		font-size: 1.0625rem;
+		font-size: var(--text-md);
 	}
 	.body {
 		display: grid;
@@ -187,6 +187,7 @@ const state = (st: Scenario['steps'][number], port: string) =>
 	.key rect {
 		fill: var(--ink);
 	}
+	/* SVG text below is sized in viewBox user units (it scales with the ring), not in CSS type steps */
 	.key text {
 		fill: var(--ink);
 		font-size: 12px;
@@ -265,7 +266,7 @@ const state = (st: Scenario['steps'][number], port: string) =>
 	}
 	.legend {
 		margin: 0.875rem 0 0;
-		font-size: 0.8125rem;
+		font-size: var(--text-xs);
 	}
 	.err {
 		color: var(--error);

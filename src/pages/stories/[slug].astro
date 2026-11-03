@@ -1,6 +1,8 @@
 ---
 import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import Gloss from '../../components/Gloss.astro';
+import IncidentReplay from '../../components/IncidentReplay.astro';
 import { getStories } from '../../lib/stories';
 import { stages } from '../../lib/stages';
 import { url } from '../../lib/url';
@@ -21,7 +23,9 @@ const stage = stages[stageIndex];
 			<p class="eyebrow">Stage {stageIndex + 1} · {stage.label} · {stage.system}</p>
 			<h1>{story.data.title}</h1>
 		</header>
-		<p class="lede">{story.data.summary}</p>
+		<p class="lede">
+			<Gloss text={story.data.summary} />
+		</p>
 
 		{
 			story.data.metrics.length > 0 && (
@@ -36,6 +40,9 @@ const stage = stages[stageIndex];
 		<div class="prose">
 			<Content />
 		</div>
+
+		{/* the incident replay is evidence for this one story */}
+		{story.id === 'one-bad-message' && <IncidentReplay />}
 
 		<p class="back"><a class="btn press" href={url()}>← Back to the pipeline</a></p>
 	</article>
@@ -65,7 +72,7 @@ const stage = stages[stageIndex];
 		padding: 0.875rem 1.125rem;
 		border-radius: var(--radius);
 		box-shadow: var(--shadow-sm);
-		font-size: 0.9375rem;
+		font-size: var(--text-sm);
 		font-weight: 600;
 		line-height: 1.35;
 	}

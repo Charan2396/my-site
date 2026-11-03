@@ -1,0 +1,11 @@
+---
+// Renders text with jargon wrapped in <abbr title="plain English"> on first use (src/lib/gloss.ts).
+// Pass one `seen` set to every Gloss in a figure or page so each term is glossed once.
+import { glossTokens } from '../lib/gloss';
+interface Props {
+	text: string;
+	seen?: Set<string>;
+}
+const { text, seen } = Astro.props;
+---
+{glossTokens(text, seen).map((t) => (typeof t === 'string' ? t : <abbr title={t.title}>{t.text}</abbr>))}
