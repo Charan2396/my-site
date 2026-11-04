@@ -19,6 +19,12 @@ const stage = stages.find((s) => s.key === d.stage);
 const related = await resolveRelated(d.related);
 const nonGoals = d.nonGoals ?? [];
 const options = d.options ?? [];
+// a design's optional sections, as [id, heading, items]; each renders only when filled in
+const list = (id: string, title: string, items?: string[]) => ({ id, title, items: items ?? [] });
+const why = list('why', 'Why this approach', d.why);
+const guards = list('guards', 'What it guards against', d.guardsAgainst);
+const limits = list('limits', 'Known limits', d.knownLimits);
+const wentWrong = (d.wentWrong ?? []).map((w) => ({ ...w, href: w.href && url(w.href) }));
 ---
 
 <Base title={d.title} description={d.summary}>
@@ -39,12 +45,20 @@ const options = d.options ?? [];
 		<p class="lede">
 			<Gloss text={d.summary} />
 		</p>
-		<p class="proof"><span class="card">{d.proof}</span></p>
 
 		<section aria-labelledby="problem">
 			<h2 id="problem">Problem</h2>
 			<p>{d.problem}</p>
 		</section>
+
+		{
+			d.whoItServes && (
+				<section aria-labelledby="serves">
+					<h2 id="serves">Who it serves</h2>
+					<p>{d.whoItServes}</p>
+				</section>
+			)
+		}
 
 		{
 			d.constraints.length > 0 && (
@@ -72,9 +86,26 @@ const options = d.options ?? [];
 			)
 		}
 
+		{
+			why.items.length > 0 && (
+				<section aria-labelledby={why.id}>
+					<h2 id={why.id}>{why.title}</h2>
+					<ul class="list">
+						{why.items.map((t) => (
+							<li>{t}</li>
+						))}
+					</ul>
+				</section>
+			)
+		}
+
 		<section aria-labelledby="decision">
 			<h2 id="decision">Decision</h2>
-			<p class="decision card">{d.decision}</p>
+			<div class="decision card">
+				{d.status && <p class="status">Status: {d.status}</p>}
+				<p>{d.decision}</p>
+				{d.revisit && <p class="revisit">{d.revisit}</p>}
+			</div>
 		</section>
 
 		{design.id === 'store-and-forward' && <StoreForwardToggle />}
@@ -95,6 +126,21 @@ const options = d.options ?? [];
 			)
 		}
 
+		{
+			[guards, limits]
+				.filter((x) => x.items.length > 0)
+				.map((x) => (
+					<section aria-labelledby={x.id}>
+						<h2 id={x.id}>{x.title}</h2>
+						<ul class="list">
+							{x.items.map((t) => (
+								<li>{t}</li>
+							))}
+						</ul>
+					</section>
+				))
+		}
+
 		<section aria-labelledby="outcome">
 			<h2 id="outcome">Outcome</h2>
 			<p>{d.outcome}</p>
@@ -109,7 +155,28 @@ const options = d.options ?? [];
 			)
 		}
 
-		{design.body?.trim() && <div class="prose"><Content /></div>}
+		{
+			wentWrong.length > 0 && (
+				<section aria-labelledby="went-wrong">
+					<h2 id="went-wrong">What went wrong along the way</h2>
+					<ul class="list">
+						{wentWrong.map((w) => (
+							<li>
+								{w.text}
+								{w.href && (
+									<>
+										{' '}
+										<a href={w.href}>{w.link}&nbsp;→</a>
+									</>
+								)}
+							</li>
+						))}
+					</ul>
+				</section>
+			)
+		}
+
+		{design.body?.trim() && <div class="prose takeaway"><Content /></div>}
 
 		{
 			related.length > 0 && (
@@ -142,18 +209,6 @@ const options = d.options ?? [];
 		margin: 0;
 		color: var(--muted);
 	}
-	.proof {
-		margin: 1.75rem 0 0;
-	}
-	.proof span {
-		display: inline-block;
-		padding: 0.75rem 1.125rem;
-		border-radius: var(--radius);
-		box-shadow: var(--shadow-sm);
-		font-size: var(--text-sm);
-		font-weight: 600;
-		line-height: 1.35;
-	}
 	section,
 	.prose {
 		margin-top: 3rem;
@@ -179,9 +234,31 @@ const options = d.options ?? [];
 		font-weight: 600;
 	}
 	.decision {
+		max-width: var(--measure);
 		padding: 1.25rem 1.375rem;
 		background: var(--tint);
 		box-shadow: var(--shadow-sm);
+	}
+	.decision .status {
+		margin-bottom: 0.5rem;
+		color: var(--accent);
+		font-size: var(--text-sm);
+		font-weight: 600;
+	}
+	.decision .revisit {
+		margin-top: 0.875rem;
+		color: var(--muted);
+		font-size: var(--text-sm);
+	}
+	/* the one-sentence takeaway */
+	.takeaway {
+		max-width: var(--measure);
+		padding-left: 1rem;
+		border-left: 3px solid var(--accent-fill);
+		font-weight: 600;
+	}
+	.takeaway :global(p) {
+		margin: 0;
 	}
 	.back {
 		margin-top: 3.5rem;

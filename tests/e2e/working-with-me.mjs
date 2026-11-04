@@ -25,8 +25,6 @@ const four = ['How I design', 'How I ship change safely', 'How I keep it running
 ok(JSON.stringify(h2s.slice(0, 4)) === JSON.stringify(four), `four section h2s in order: ${h2s.slice(0, 4)}`);
 ok(await p.locator('#keep-up ~ ul.claims > li').count() === 4, 'keep it running: 4 cards');
 ok(h2s.indexOf('Bring me your problem') !== -1 && h2s.indexOf('Bring me your problem') < h2s.indexOf('What I\'d do in my first 90 days on your team'), 'problem section before the 90-day plan');
-const steps = await p.$$eval('#your-problem ~ ol > li .label', (l) => l.map((x) => x.textContent.trim()));
-ok(steps.join('|') === "Clarify|Constraints|Options|Decision|How we'd know", `method: 5 steps (${steps})`);
 const prob = await p.$$eval('#your-problem ~ * a', (as) => as.map((a) => a.getAttribute('href')));
 ok(prob.includes('/my-site/reconciliation/') && prob.includes('/my-site/designs/reconciliation-engine/'), `problem links: ${prob}`);
 ok((await p.textContent('#your-problem ~ .note')).includes('proof of concept'), 'problem labelled as a proof-of-concept approach');
@@ -42,7 +40,11 @@ ok(stories.length === 4, `links to 4 stories (${stories.length})`);
 ok(!internal.some((u) => /\/stories\/(pubsub-broker|store-and-forward)\//.test(u)), 'no links to deleted stories');
 for (const d of ['cdc-pubsub-broker', 'store-and-forward', 'ems-mq-migration', 'reconciliation-engine', 'ad-auth-mq']) ok(internal.includes(`${base}designs/${d}/`), `links /designs/${d}/`);
 for (const u of internal) {
-  if (u.includes('#')) { const id = u.split('#')[1]; ok(await p.$(`#${id}`) !== null, `anchor #${id} exists`); continue; }
+  if (u.includes('#')) {
+    const [path, id] = u.split('#');
+    if (path === p.url().split('#')[0]) { ok(await p.$(`#${id}`) !== null, `anchor #${id} exists`); continue; }
+    const q = await b.newPage(); await q.goto(u); ok(await q.$(`#${id}`) !== null, `${u} anchor exists`); await q.close(); continue;
+  }
   const s = (await p.request.get(u)).status(); ok(s === 200, `${u} ${s}`);
 }
 ok(links.includes('mailto:sricharan23@gmail.com') && links.includes('https://linkedin.com/in/charansri'), 'contact links');

@@ -11,7 +11,11 @@ const stageLabel = (key?: string) => stages.find((s) => s.key === key)?.label;
 <Base title="Designs" description="Design docs for the systems I designed and built: problem, constraints, decision and outcome.">
 	<p class="eyebrow">Designs</p>
 	<h1>Selected designs</h1>
-	<p class="lede">Each one is a short design doc: the problem, the constraints, the decision and what came of it.</p>
+	<p class="lede">
+		I joined Ingram Micro in 2022 as a replication engineer, on the platform that now replicates 300+ mainframe tables into
+		Oracle. These are the systems I've designed and built on it since, each built so the teams downstream can trust it. Each
+		one is a short design doc: the problem, the constraints, the decision and what came of it.
+	</p>
 	<ol class="designs">
 		{
 			designs.map((d) => (

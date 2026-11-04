@@ -7,7 +7,7 @@ I ran Dieter Rams' ten principles over the site with Claude Code and scored it 2
 
 **What changed**
 
-- The hero now says what I build: data systems that move change data off legacy platforms and into the cloud. Three proof chips under it link to design docs: the CDC to Pub/Sub broker, the 5,000+-queue migration architecture and the reconciliation engine.
+- The hero now says what I build: data systems that move change data off legacy platforms and into the cloud. Three proof chips under it link to design docs: the CDC to Pub/Sub broker, the EMS-to-MQ migration architecture and the reconciliation engine. (The chips were removed again on 2026-11-04: the designs section right below lists the same designs.)
 - Each pipeline stage links to the design behind it where one exists ("Read the design"), and to a story otherwise ("Read the story"). The Process card also links the log runaway, which no card reached before.
 - The incident replay moved off the home page and into the one-bad-message story, where it serves as evidence. Home now has "Selected designs", then a short list of incidents and fixes from running the platform.
 - The nav is Designs, Working with me, Projects and Resume. Decisions sits in the footer next to the build log.

@@ -17,22 +17,22 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 		claims: [
 			{
 				label: 'reuse before build',
-				text: 'I co-designed a store-and-forward IBM MQ architecture that cut planned-downtime exposure for a warehouse integration by over 90 percent, while reusing existing infrastructure.',
+				text: 'A co-designed store-and-forward IBM MQ architecture that reused infrastructure we already ran.',
 				links: [{ href: 'designs/store-and-forward/', text: 'Design: store-and-forward' }],
 			},
 			{
 				label: 'migration architecture',
-				text: 'I profiled a TIBCO EMS estate of 5,000+ queues, wrote the EMS-to-MQ migration architecture, sandbox and onboarding program, and presented it to a 65-invitee audience.',
+				text: 'Profiled a TIBCO EMS estate first, then wrote the EMS-to-MQ migration architecture, sandbox and onboarding program.',
 				links: [{ href: 'designs/ems-mq-migration/', text: 'Design: EMS to MQ migration' }],
 			},
 			{
 				label: 'new paths',
-				text: 'I co-built, from scratch, a real-time Java data broker that converts raw mainframe CDC messages into JSON and publishes them to Google Cloud Pub/Sub for downstream teams.',
+				text: 'A co-built, real-time Java broker that takes mainframe change data to Pub/Sub as JSON for downstream teams.',
 				links: [{ href: 'designs/cdc-pubsub-broker/', text: 'Design: CDC to Pub/Sub broker' }],
 			},
 			{
 				label: 'read-only first',
-				text: 'As a proof of concept, I built a read-only engine that fingerprints each table and company code and classifies drift in both directions across three Oracle instances. It caught a flawed key heuristic before it produced false drift.',
+				text: 'A read-only reconciliation engine across three Oracle instances, built as a proof of concept.',
 				links: [
 					{ href: 'designs/reconciliation-engine/', text: 'Design: reconciliation engine' },
 					{ href: 'reconciliation/', text: 'Interactive explainer: how reconciliation finds drift' },
@@ -40,12 +40,12 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 			},
 			{
 				label: 'least privilege by design',
-				text: 'I designed and validated an Active Directory (SSSD/PAM) authentication model for IBM MQ with group-governed access and least-privilege authority, removing per-host local accounts.',
+				text: 'Active Directory authentication for IBM MQ, with group-governed, least-privilege access.',
 				links: [{ href: 'designs/ad-auth-mq/', text: 'Design: AD authentication for MQ' }],
 			},
 			{
 				label: 'less code, faster',
-				text: 'I cut message-splitter processing for a 10K-message batch from roughly 3–4 minutes to about 30 seconds, and refactored the splitter layer to remove 10,000+ lines of redundant code.',
+				text: 'Made the message splitter faster and removed 10,000+ lines of redundant code from it.',
 				story: 'splitter-30-seconds',
 			},
 		],
@@ -57,11 +57,12 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 		claims: [
 			{
 				label: 'upgrades',
-				text: 'I led the IBM MQ upgrade lifecycle for a multi-environment platform and established a non-production-to-production upgrade sequence. When a client-compatibility defect appeared, I ran a controlled rollback and cold restore.',
+				text: 'I led the IBM MQ upgrade lifecycle; upgrades go non-production first.',
+				links: [{ href: 'decisions/#adr-04', text: 'Decision: non-production before production' }],
 			},
 			{
 				label: 'guarded backfills',
-				text: 'I built backfill and purge tooling with idempotent inserts, cascade guards and zero-difference reconciliation. It recovered ~16,900 missing order-line records across 23 company codes.',
+				text: 'Backfill and purge tooling with idempotent inserts, cascade guards and zero-difference reconciliation.',
 				story: 'backfill-16900',
 			},
 			{
@@ -70,7 +71,8 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 			},
 			{
 				label: 'isolate, then fix',
-				text: 'When the queue splitter had a message-ordering defect, I rolled back a change to isolate it, then redesigned the queue-split logic to preserve ordering.',
+				text: 'A message-ordering defect: roll back to isolate it, then redesign the queue-split logic.',
+				links: [{ href: 'designs/store-and-forward/#went-wrong', text: 'What went wrong on the MQ layer' }],
 			},
 			{
 				label: 'evidence first',
@@ -89,16 +91,17 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 			},
 			{
 				label: 'self-healing repair',
-				text: 'I rebuilt the self-healing repair process as idempotent shell automation. It detects records that fail to land in Oracle, captures the failed keys and resends them to the mainframe, replacing a manual, Perl-based recovery.',
+				text: 'Failed records are regenerated from the source, by idempotent automation, not hand-patched.',
+				links: [{ href: 'decisions/#adr-01', text: 'Decision: regenerate from the source' }],
 			},
 			{
 				label: 'observability',
-				text: 'I set up Datadog observability for the MQ and Java replication services, with custom DogStatsD health metrics across queue managers, mainframe channels and Java processes. I redesigned a noisy queue-depth alert and shut down a log-ingestion runaway of over one billion events per day.',
+				text: 'Datadog observability for MQ and the Java services, including a redesigned noisy queue-depth alert.',
 				story: 'log-runaway',
 			},
 			{
 				label: 'incidents',
-				text: 'I isolated a corrupt message that made a splitter reject tens of thousands of messages, and traced a high-CPU incident to a BigDecimal column-index error.',
+				text: 'Find the one message behind tens of thousands of rejects, and trace a high-CPU incident to a BigDecimal column-index error.',
 				story: 'one-bad-message',
 			},
 		],
@@ -125,24 +128,6 @@ const sections: { id: string; title: string; caption: string; claims: Claim[] }[
 				text: 'I drove a middleware vulnerability backlog (Log4j, IBM MQ, IBM Java, Oracle client) toward zero.',
 			},
 		],
-	},
-];
-
-// How I'd reason about a sample problem; the decision and checks are what the reconciliation proof of concept does.
-const method = [
-	{ step: 'Clarify', text: 'Which tables and fields have to match, and how fresh does "matching" need to be: today, or all of history?' },
-	{ step: 'Constraints', text: 'Three production instances, so the check stays read-only and light enough to run against live systems.' },
-	{
-		step: 'Options',
-		text: "I'd weigh three: compare row counts only (cheap, but blind to which rows), compare every row (exact, but heavy on production), or fingerprint each slice with a row count plus a key hash (cheap, and points at the keys).",
-	},
-	{
-		step: 'Decision',
-		text: 'Fingerprint each table and company code by row count plus key hash, over the full history and the last 30 days.',
-	},
-	{
-		step: "How we'd know",
-		text: 'Drift is classified in both directions, a drill-down dashboard goes from a table to the exact keys, and the target is zero difference. A row whose key landed but whose values differ would still pass; that needs a value hash too.',
 	},
 ];
 
@@ -241,27 +226,12 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 		<p class="kicker">How I'd approach it</p>
 		<h2 id="your-problem">Bring me your problem</h2>
 		<p class="note">
-			A sample problem: <strong>three databases disagree and nobody trusts the dashboard.</strong> Here is how I'd work
-			through it, based on the reconciliation engine I built as a proof of concept.
+			A sample problem: <strong>three databases disagree and nobody trusts the dashboard.</strong> How I'd work through it,
+			and why, is in the design of the reconciliation engine I built as a proof of concept.
 		</p>
-		<ol class="plan method">
-			{
-				method.map((m, i) => (
-					<li class="card">
-						<span class="step" aria-hidden="true">
-							{String(i + 1).padStart(2, '0')}
-						</span>
-						<div>
-							<p class="label">{m.step}</p>
-							<p>{m.text}</p>
-						</div>
-					</li>
-				))
-			}
-		</ol>
 		<p class="note more">
-			<a href={url('reconciliation/')}>See it work: the reconciliation explainer →</a>
 			<a href={url('designs/reconciliation-engine/')}>Read the design →</a>
+			<a href={url('reconciliation/')}>See it work: the reconciliation explainer →</a>
 		</p>
 	</section>
 
@@ -407,7 +377,6 @@ const testimonials = existsSync('content/testimonials.yaml') ? await getCollecti
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem 1.5rem;
-		margin-top: 1.25rem;
 		font-weight: 600;
 	}
 	.plan .card p:first-child {

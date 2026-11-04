@@ -59,6 +59,15 @@ const designs = defineCollection({
 		nonGoals: z.array(z.string()).optional(),
 		outcome: z.string(),
 		heldUp: z.string().optional(),
+		// Presentation-level sections, each restating existing facts; rendered only when filled in.
+		whoItServes: z.string().optional(),
+		why: z.array(z.string()).optional(),
+		guardsAgainst: z.array(z.string()).optional(),
+		knownLimits: z.array(z.string()).optional(),
+		wentWrong: z.array(z.object({ text: z.string(), href: z.string().optional(), link: z.string().optional() })).optional(),
+		// The decision record folded into the doc: status from existing facts, and a forward-looking trigger.
+		status: z.enum(['PoC', 'In progress', 'In place']).optional(),
+		revisit: z.string().optional(),
 		// story slugs, design slugs or site paths starting with '/'
 		related: z.array(z.string()).optional(),
 		draft: z.boolean().default(false),
@@ -73,6 +82,8 @@ const decisions = defineCollection({
 		context: z.string(),
 		decision: z.string(),
 		consequence: z.string().optional(),
+		status: z.enum(['PoC', 'In progress', 'In place']),
+		revisit: z.string(),
 		related: z.array(z.string()).optional(),
 	}),
 });

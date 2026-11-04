@@ -16,9 +16,7 @@ await p.goto(base);
 // hero
 ok((await text(p, '.hero .lede')) === 'I design and build data systems that move change data off legacy platforms and into the cloud: CDC streams, messaging architectures, reconciliation tooling, built so the teams downstream can trust them.', 'hero positioning line');
 ok((await p.$$eval('.hero .contact a', (as) => as.map((a) => a.textContent.trim()))).join('|') === 'Email|LinkedIn|Resume', 'hero keeps Email, LinkedIn, Resume');
-const chips = await p.$$eval('.hero .proof a', (as) => as.map((a) => `${a.textContent.trim()}=${a.getAttribute('href')}`));
-ok(JSON.stringify(chips) === JSON.stringify(['CDC → Pub/Sub broker, co-built from scratch →=/my-site/designs/cdc-pubsub-broker/', '5,000+-queue migration architecture →=/my-site/designs/ems-mq-migration/', 'Reconciliation engine PoC across 3 instances →=/my-site/designs/reconciliation-engine/']), `3 proof chips link to designs: ${chips.join(' | ')}`);
-for (const c of chips) ok((await p.request.get(new URL(c.split('=')[1], base).href)).status() === 200, `chip target 200: ${c.split('=')[1]}`);
+ok((await p.$$('.hero .proof a')).length === 0, 'no hero proof chips (Selected designs lists them; 2026-11-04)');
 // selected designs + held-up stories; no stories list, no "More to explore", no replay
 const cards = await p.$$eval('.designs a', (as) => as.map((a) => a.getAttribute('href')));
 ok(cards.length === 5 && cards.every((h) => h.startsWith('/my-site/designs/')), `5 design cards: ${cards.join(' ')}`);
@@ -30,8 +28,8 @@ ok(!(await p.textContent('main')).includes('More to explore') && (await p.$$('[d
 // one route per target: count links per href in main
 const counts = await p.$$eval('main a[href]', (as) => as.reduce((m, a) => ((m[a.getAttribute('href')] = (m[a.getAttribute('href')] || 0) + 1), m), {}));
 ok(counts['/my-site/stories/one-bad-message/'] <= 2, `one-bad-message linked ${counts['/my-site/stories/one-bad-message/']}x on home (stage card + held-up list)`);
-const over = Object.entries(counts).filter(([h, n]) => n > (h.includes('/designs/') ? 3 : 2));
-ok(over.length === 0, `no target linked more than card + section (+ hero chip for designs): ${over.map((x) => x.join('=')).join(' ') || 'ok'}`);
+const over = Object.entries(counts).filter(([, n]) => n > 2);
+ok(over.length === 0, `no target linked more than card + section: ${over.map((x) => x.join('=')).join(' ') || 'ok'}`);
 ok(!counts['/my-site/resume/'] || counts['/my-site/resume/'] === 1, `Resume once in main (hero): ${counts['/my-site/resume/']}`);
 ok(!counts['/my-site/projects/simple-dynamo/'] && !counts['/my-site/reconciliation/'], 'no Simple Dynamo / explainer duplicates of Projects on home');
 // fig. 1: log-runaway reachable, intro copy matches behaviour

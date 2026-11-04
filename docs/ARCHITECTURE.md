@@ -23,12 +23,12 @@ A schema validates the frontmatter, so a typo fails the build.
 | `content/stories/*.md` | `title, stage, order, summary, short?, metrics[]` | `stage` is one of `source, queue, process, store, consume`. Each body runs problem → what I did → result. |
 | `content/build-log/*.md` | `date, title` | Prompts, plans, what broke, what I learned. |
 | `content/projects/*.md` | `title, summary, link?` | Job Scout (once it exists) and the UB Dynamo coursework. |
-| `content/designs/*.md` | `title, stage?, order, summary, proof, problem, constraints[], decision, outcome, options?, tradeoffs?, nonGoals?, heldUp?, related?` | Design docs (Google design-doc / ADR shape), resume facts only. Optional sections render only when filled in. |
-| `content/decisions.yaml` | `id, title, context, decision, consequence?, related?` | Decision log (Nygard ADRs), `file()` loader, rendered on `/decisions/`. |
+| `content/designs/*.md` | `title, stage?, order, summary, proof, problem, constraints[], decision, outcome, options?, tradeoffs?, nonGoals?, heldUp?, whoItServes?, why[]?, guardsAgainst[]?, knownLimits[]?, wentWrong[]?, status?, revisit?, related?` | Design docs (Google design-doc / ADR shape), resume facts only. Optional sections render only when filled in. The doc's own decision record is its Decision box (status + revisit); the body is one takeaway sentence. |
+| `content/decisions.yaml` | `id, title, context, decision, consequence?, status, revisit, related?` | Decision log (Nygard ADRs), standalone decisions only, `file()` loader, rendered on `/decisions/`. |
 | `content/resume.md` | none | Rendered on `/resume`. |
 
 ## Pages
-- `/`: hero (positioning line + 3 proof chips to designs), impact and career strips, the pipeline (fig. 1 + fig. 2), "Selected designs" (5 cards) and "From running it: incidents and fixes" (the 4 stories).
+- `/`: hero (positioning line + Email/LinkedIn/Resume; no proof chips since 2026-11-04), impact and career strips, the pipeline (fig. 1 + fig. 2), "Selected designs" (5 cards) and "From running it: incidents and fixes" (the 4 stories).
 - `/designs/` and `/designs/[slug]`: design docs. `/decisions/`: the decision log (linked from `/designs/` and the footer).
 - `/stories/[slug]`: one page per story; `one-bad-message` also hosts the incident replay (fig. 3).
 - Nav: Designs · Working with me · Projects · Resume. Designs stays current (`aria-current="true"`) on design doc pages. Footer: Email, LinkedIn, GitHub, Decisions, Build log.
@@ -72,6 +72,7 @@ It is HTML, not SVG: a list reflows from horizontal to vertical on narrow screen
 - The hero materializes once per visit (opacity + scale, CSS, flagged in `sessionStorage`). No looping or ambient motion anywhere. Below 56rem the replay's stage row (solid, under the translucent header) stays pinned while the steps scroll.
 
 ## Tests
+- Say it once: `tests/e2e/say-once.mjs` greps `dist/` so each headline number ("over 90", "5,000+", "65-invitee", the broker sentence) appears on its design page and at most twice elsewhere (the resume is the source and is not counted).
 - `tests/e2e/*.mjs`: Playwright suites (record view, incident replay, pages, stories, working-with-me, motion, explainers, review2, redesign: gestures, materials, preferences, press feedback) plus the Node-only spring self-check, at 390/820/1280, light/dark, no-JS and reduced motion.
 - `npm run test:e2e` (`tests/run.mjs`) serves the existing `dist/` with `astro preview --port 4329` and runs every suite; build first. `BASE_URL` points it at another host (e.g. the live site), `CHROME_PATH` picks the browser (default: system Chrome on macOS, else Playwright's chromium). Screenshots go to `tests/e2e/.out/` (gitignored).
 

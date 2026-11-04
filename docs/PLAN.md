@@ -51,6 +51,7 @@ Moved up from "Follow a record": this is what makes the site more than the resum
 - Shipped 2026-10-28: v2 phases 4 and 6 (page transitions and pipeline motion; Lighthouse 100s, Playwright e2e suite in `tests/e2e`, run with `npm run test:e2e`).
 - 2026-10-29: second review round shipped (hero positioning, career strip, fig. 1/2 accuracy, explainer limits, projects reorder).
 - 2026-11-03: Designed, then proven — designs, decision log, team page, replay moved, type tokens.
+- 2026-11-04: Say it once — headline numbers on their own pages, hero chips removed, design-doc decisions folded into the docs (status + revisit), optional Why / Guards / Limits / Went wrong / Who it serves sections, team page trimmed by a third.
 
 ## 7. Build log page
 - Backfill entries from the setup session: brief → CLAUDE.md → GitHub dig → this plan.

@@ -4,7 +4,7 @@ const b = await launch();
 let fails = 0;
 const ok = (c, m) => { if (!c) fails++; console.log(c ? 'PASS' : 'FAIL', m); };
 const slugs = ['cdc-pubsub-broker', 'store-and-forward', 'ems-mq-migration', 'reconciliation-engine', 'ad-auth-mq'];
-const ORDER = ['Problem', 'Constraints', 'Options considered', 'Decision', 'Trade-offs & non-goals', 'Outcome', 'How it held up', 'Related'];
+const ORDER = ['Problem', 'Who it serves', 'Constraints', 'Options considered', 'Why this approach', 'Decision', 'Trade-offs & non-goals', 'What it guards against', 'Known limits', 'Outcome', 'How it held up', 'What went wrong along the way', 'Related'];
 
 // index
 let p = await b.newPage({ viewport: { width: 1280, height: 900 } });
@@ -37,7 +37,7 @@ ok(vt.length === 1 && vt[0] === 'stage-consume', `broker header transition name:
 await p.goto(base + 'designs/ems-mq-migration/');
 ok((await p.$$('[data-astro-transition-scope]')).length === 0, 'no-stage design has no transition name');
 await p.goto(base + 'designs/reconciliation-engine/');
-ok((await p.textContent('.proof')).includes('Proof of concept'), 'reconciliation labelled proof of concept');
+ok((await p.textContent('.lede')).includes('proof of concept'), 'reconciliation labelled proof of concept');
 ok((await p.locator('article a[href="/my-site/reconciliation/"]').count()) === 1, 'reconciliation links the explainer');
 await p.close();
 
@@ -118,7 +118,7 @@ ok((await p.goto(base + 'decisions/')).status() === 200, '/decisions/ 200');
 ok((await p.textContent('h1')) === 'Decision log', 'decisions h1');
 ok((await p.textContent('.lede')).includes('short records of a design choice: the context, the decision, and what followed'), 'plain ADR intro');
 const n = await p.$$eval('.log > li', (l) => l.length);
-ok(n >= 8, `${n} decision entries`);
+ok(n === 5, `${n} standalone decision entries`);
 const empty = await p.$$eval('.log > li', (l) => l.filter((x) => !x.querySelector('h2')?.textContent.trim() || x.querySelectorAll('dd').length < 2).length);
 ok(empty === 0, 'every entry has a title, context and decision');
 for (const h of [...new Set(await p.$$eval('.log a[href]', (as) => as.map((a) => a.href)))]) {

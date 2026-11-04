@@ -7,22 +7,8 @@ const tiles = [
 	{ prefix: '~', count: 10, suffix: 'M', unit: 'rows/day', caption: 'through the pipeline' },
 	{ prefix: '', count: 3, suffix: '', unit: 'Oracle instances', caption: 'production operational data stores' },
 ];
-const stack = [
-	'Change data capture (CDC)',
-	'Event-driven messaging',
-	'IBM MQ',
-	'Google Cloud Pub/Sub',
-	'BigQuery',
-	'Oracle 19c',
-	'PL/SQL',
-	'Snowflake',
-	'Python',
-	'Java',
-	'SQL',
-	'Datadog',
-	'AWS',
-	'Airflow (in progress)',
-];
+// Only what the designs and stories on this site evidence (BigQuery is a downstream team's store, not mine).
+const stack = ['CDC', 'IBM MQ', 'Java', 'Oracle', 'Google Cloud Pub/Sub', 'Python', 'SQL', 'Datadog', 'Snowflake', 'AWS', 'Airflow (in progress)'];
 ---
 
 <section class="impact" aria-labelledby="impact-heading">
