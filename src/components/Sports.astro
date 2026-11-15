@@ -1,0 +1,65 @@
+---
+// Off the clock: the owner plays badminton and football and is into MMA. The lines are analogies to the work, not claims.
+const sports = [
+	{ n: '01', name: 'Badminton', line: 'Latency is a footwork problem. Be in position before the record lands.' },
+	{ n: '02', name: 'Football', line: 'Shape beats heroics: ordered passes, covered gaps, nobody out of position.' },
+	{ n: '03', name: 'MMA', line: 'Every system gets hit. Train the recovery: the escape, the reset, the next round.' },
+];
+---
+
+<section class="off" aria-labelledby="off-heading">
+	<h2 id="off-heading">Off the clock</h2>
+	<ul>
+		{
+			sports.map((s) => (
+				<li class="card">
+					<span class="n" aria-hidden="true">{s.n}</span>
+					<h3>{s.name}</h3>
+					<p>{s.line}</p>
+				</li>
+			))
+		}
+	</ul>
+</section>
+
+<style>
+	.off {
+		margin-top: var(--space-20);
+	}
+	h2 {
+		margin: 0 0 var(--space-5);
+	}
+	ul {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+		gap: var(--space-4);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	li {
+		display: grid;
+		gap: var(--space-2);
+		padding: var(--space-5) var(--space-6);
+		border-top: 0.25rem solid var(--heat);
+	}
+	.n {
+		color: var(--heat);
+		font-family: var(--font-mono);
+		font-size: var(--text-xs);
+		font-weight: 600;
+	}
+	h3 {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--text-2xl);
+		font-weight: 800;
+		line-height: 1;
+		text-transform: uppercase;
+	}
+	p {
+		margin: 0;
+		color: var(--muted);
+		font-size: var(--text-sm);
+	}
+</style>

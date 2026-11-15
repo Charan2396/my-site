@@ -176,7 +176,7 @@ await m.goto(base);
 const hc = await hdr(m);
 const borders = await m.$$eval('.stage, [data-version], .impact ul, .designs .design', (l) => [...new Set(l.map((e) => { const s = getComputedStyle(e); return `${s.borderTopWidth} ${s.borderTopStyle} ${s.borderTopColor}`; }))]);
 ok(hc.bf === 'none' && hc.border === '1px' && !hc.bg.startsWith('rgba'), `more contrast header: ${JSON.stringify(hc)}`);
-ok(borders.length === 1 && borders[0] === '1px solid rgb(29, 29, 31)', `more contrast cards: ${borders}`);
+ok(borders.length === 1 && borders[0] === '1px solid rgb(244, 244, 239)', `more contrast cards: ${borders}`);
 await mc.close();
 
 // review screenshots (reduced motion so nothing is mid-animation)

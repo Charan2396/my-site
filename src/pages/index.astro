@@ -4,6 +4,7 @@ import Base from '../layouts/Base.astro';
 import Pipeline from '../components/Pipeline.astro';
 import ImpactStrip from '../components/ImpactStrip.astro';
 import CareerStrip from '../components/CareerStrip.astro';
+import Sports from '../components/Sports.astro';
 import { getStories } from '../lib/stories';
 import { getDesigns } from '../lib/designs';
 import { stages } from '../lib/stages';
@@ -98,6 +99,8 @@ const hasAvatar = existsSync('public/avatar.jpg');
 		</ul>
 	</section>
 
+	<Sports />
+
 	<section class="about" aria-labelledby="about-heading">
 		{
 			hasAvatar ? (
@@ -116,7 +119,7 @@ const hasAvatar = existsSync('public/avatar.jpg');
 <style>
 	.hero {
 		position: relative;
-		max-width: 52rem;
+		max-width: 64rem;
 		margin-bottom: var(--space-16);
 		transform-origin: 0 0;
 	}
@@ -160,7 +163,7 @@ const hasAvatar = existsSync('public/avatar.jpg');
 		width: 1rem;
 		height: 1rem;
 		border-radius: 50%;
-		background: color-mix(in srgb, var(--data) 35%, transparent);
+		background: var(--heat);
 	}
 	@media (prefers-reduced-motion: no-preference) {
 		.hero.materialize .pulse {
@@ -209,11 +212,11 @@ const hasAvatar = existsSync('public/avatar.jpg');
 		}
 	}
 	h1 {
-		margin-block: 0 var(--space-3);
+		margin-block: 0 var(--space-4);
+		padding-left: var(--space-4);
+		border-left: 0.5rem solid var(--accent);
 		font-size: var(--text-display);
-		font-weight: 700;
-		line-height: 1.05;
-		letter-spacing: -0.03em;
+		line-height: 0.9;
 	}
 	.subtitle {
 		margin: 0 0 var(--space-6);
@@ -240,7 +243,7 @@ const hasAvatar = existsSync('public/avatar.jpg');
 		align-items: center;
 		min-height: 2rem;
 		padding: var(--space-1) var(--space-3);
-		border-radius: 999px;
+		border-radius: var(--radius-sm);
 		background: var(--tint);
 		color: var(--accent);
 		font-size: var(--text-xs);
@@ -251,8 +254,6 @@ const hasAvatar = existsSync('public/avatar.jpg');
 	.tagline {
 		margin: var(--space-20) 0 var(--space-3);
 		font-size: var(--text-3xl);
-		line-height: 1.08;
-		letter-spacing: -0.025em;
 	}
 	.designs-section {
 		margin-top: var(--space-20);
