@@ -1,4 +1,5 @@
 ---
+import { existsSync } from 'node:fs';
 import Base from '../layouts/Base.astro';
 import Pipeline from '../components/Pipeline.astro';
 import ImpactStrip from '../components/ImpactStrip.astro';
@@ -24,6 +25,8 @@ for (const { key } of stages) {
 		};
 }
 const stageLabel = (key?: string) => stages.find((s) => s.key === key)?.label;
+// Photo is optional: drop a file at public/avatar.jpg (strip EXIF/GPS first) and it replaces the monogram.
+const hasAvatar = existsSync('public/avatar.jpg');
 ---
 
 <Base>
@@ -40,6 +43,12 @@ const stageLabel = (key?: string) => stages.find((s) => s.key === key)?.label;
 				title="change data capture">CDC</abbr> streams, messaging architectures, reconciliation tooling, built so the teams
 			downstream can trust them.
 		</p>
+		<div class="flow" aria-hidden="true">
+			<span class="rail"></span>
+			<span class="node"></span><span class="node"></span><span class="node"></span><span class="node"></span><span
+				class="node"></span>
+			<span class="pulse"></span>
+		</div>
 	</section>
 	<script is:inline>
 		// Materialize the hero once per visit (opacity + scale, CSS); without JS nothing is hidden.
@@ -88,13 +97,105 @@ const stageLabel = (key?: string) => stages.find((s) => s.key === key)?.label;
 			}
 		</ul>
 	</section>
+
+	<section class="about" aria-labelledby="about-heading">
+		{
+			hasAvatar ? (
+				<img class="avatar" src={url('avatar.jpg')} alt="Sricharan Anand" width="120" height="120" loading="lazy" />
+			) : (
+				<span class="avatar monogram" aria-hidden="true">SA</span>
+			)
+		}
+		<div>
+			<h2 id="about-heading" class="eyebrow">About</h2>
+			<p>Based in Irvine, CA. The quickest way to reach me is the email or LinkedIn buttons at the top.</p>
+		</div>
+	</section>
 </Base>
 
 <style>
 	.hero {
+		position: relative;
 		max-width: 52rem;
 		margin-bottom: var(--space-16);
 		transform-origin: 0 0;
+	}
+	/* dot grid behind the hero, fading out to the right and bottom */
+	.hero::before {
+		content: '';
+		position: absolute;
+		inset: calc(var(--space-8) * -1) calc(var(--space) * -1) calc(var(--space-4) * -1) calc(var(--space) * -1);
+		z-index: -1;
+		background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+		background-size: 1.25rem 1.25rem;
+		mask-image: radial-gradient(ellipse at 0 0, #000 30%, transparent 75%);
+		pointer-events: none;
+	}
+	/* a data-flow line: five stages, one pulse that travels once per visit, then rests at the sink */
+	.flow {
+		position: relative;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		max-width: 28rem;
+		height: 1rem;
+		margin-top: var(--space-8);
+	}
+	.rail {
+		position: absolute;
+		inset-inline: 0;
+		height: 2px;
+		background: var(--rule);
+	}
+	.node {
+		position: relative;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: var(--data);
+	}
+	.pulse {
+		position: absolute;
+		right: 0;
+		width: 1rem;
+		height: 1rem;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--data) 35%, transparent);
+	}
+	@media (prefers-reduced-motion: no-preference) {
+		.hero.materialize .pulse {
+			animation: flow 1.6s 0.5s cubic-bezier(0.25, 1, 0.5, 1) backwards;
+		}
+	}
+	@keyframes flow {
+		from {
+			transform: translateX(calc(-1 * min(28rem, 100vw - 2 * var(--space)) + 1rem));
+		}
+	}
+	.about {
+		display: flex;
+		align-items: center;
+		gap: var(--space-6);
+		margin-top: var(--space-20);
+	}
+	.about p {
+		margin: var(--space-1) 0 0;
+	}
+	.avatar {
+		flex: none;
+		width: 7.5rem;
+		height: 7.5rem;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+	.monogram {
+		display: grid;
+		place-items: center;
+		background: var(--ink);
+		color: var(--bg);
+		font-size: var(--text-xl);
+		font-weight: 700;
+		letter-spacing: 0.02em;
 	}
 	@media (prefers-reduced-motion: no-preference) {
 		.hero.materialize {
@@ -193,8 +294,12 @@ const stageLabel = (key?: string) => stages.find((s) => s.key === key)?.label;
 		margin-top: auto;
 		border-radius: var(--radius-sm);
 	}
+	.design:hover {
+		border-color: var(--data);
+	}
 	.stage-tag {
-		color: var(--muted);
+		color: var(--data);
+		font-family: var(--font-mono);
 		font-size: var(--text-xs);
 		font-weight: 600;
 		letter-spacing: 0.01em;

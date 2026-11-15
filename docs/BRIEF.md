@@ -26,3 +26,6 @@ No internal hostnames, server names, database instance names, customer names, or
 - Framework (Astro / Next static export / plain HTML)?
 - Visual direction — show me 2–3 distinct options before building.
 - Domain name?
+
+## Photo (optional)
+Drop a recent, friendly photo at `public/avatar.jpg` to replace the monogram in the home About block. Strip EXIF and GPS first, and avoid backgrounds that identify a place. Keep the SA monogram in the header; the photo stays out of the hero.
