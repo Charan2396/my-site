@@ -1,46 +1,49 @@
-/* Design system: dark only, one volt accent, hard edges, condensed poster type for titles, system type for text.
+/* Design system: dark only, Apple-style. System type at bold weights with tight tracking, soft glass surfaces,
+   large radii, one blue accent plus a cool cyan for data, an ambient glow behind the hero.
    Every colour is a token here; components use var(--…) only.
    WCAG contrast (text on bg / surface / code well), measured:
-   ink 17.94 / 16.81 / 15.55   muted 7.17 / 6.72 / 6.22   accent (volt) 16.77 / 15.72 / 14.54
-   heat 6.39 / 5.99 / 5.54     error 7.06 / 6.62 / 6.12   on-accent on volt 16.77   error on error-bg 6.13 */
+   ink 19.29 / 15.63 / 12.80   muted 8.16 / 6.61 / 5.42   accent 6.96 / 5.64 / 4.62   data 12.20 / 9.89 / 8.10
+   heat 10.22 / 8.28 / 6.78    error 7.45 / 6.03 / 4.94   on-accent (white) on accent-fill 4.70 */
 :root {
-	/* Dark only: one theme, no toggle. Volt is the signature accent; heat (orange) marks motion and alerts. */
+	/* Dark only: one theme, no toggle. Blue is the accent, cyan marks data, orange (heat) marks motion and alerts. */
 	color-scheme: dark;
-	--bg: #0a0a0b;
-	--surface: #131316;
-	--ink: #f4f4ef;
-	--muted: #9b9ba3;
-	--accent: #c8ff2e;
-	--accent-fill: #c8ff2e;
-	--data: #c8ff2e;
-	--heat: #ff5a3c;
-	--grid-dot: rgb(255 255 255 / 0.16);
-	--on-accent: #0a0a0b;
-	--tint: color-mix(in srgb, var(--accent) 10%, var(--surface));
-	--fill: rgb(255 255 255 / 0.07);
-	--fill-strong: rgb(255 255 255 / 0.13);
-	--code-bg: #1b1b20;
-	--rule: rgb(255 255 255 / 0.14);
-	--card-border: rgb(255 255 255 / 0.14);
-	--error: #ff6b57;
-	--error-bg: #2c1512;
+	--bg: #000000;
+	--surface: #1c1c1e;
+	--ink: #f5f5f7;
+	--muted: #a1a1a6;
+	--accent: #2997ff;
+	--accent-fill: #0071e3;
+	--data: #64d2ff;
+	--heat: #ff9f0a;
+	--glow: rgb(41 151 255 / 0.28);
+	--glow-2: rgb(100 210 255 / 0.16);
+	--on-accent: #ffffff;
+	--tint: color-mix(in srgb, var(--accent) 12%, var(--surface));
+	--fill: rgb(255 255 255 / 0.08);
+	--fill-strong: rgb(255 255 255 / 0.14);
+	--code-bg: #2c2c2e;
+	--rule: rgb(255 255 255 / 0.12);
+	--card-border: rgb(255 255 255 / 0.08);
+	--error: #ff6961;
+	--error-bg: #2c1715;
 	/* translucent chrome: semi-opaque so text under it stays out of the way */
-	--material: rgb(10 10 11 / 0.72);
+	--material: rgb(22 22 23 / 0.72);
 	--edge: rgb(0 0 0 / 0.8);
-	--shadow-sm: none;
-	--shadow-md: none;
-	--shadow-lg: 0 0 0 1px rgb(255 255 255 / 0.04);
+	/* a glass edge: a one-pixel highlight on top, depth below */
+	--shadow-sm: inset 0 1px 0 rgb(255 255 255 / 0.06);
+	--shadow-md: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 8px 24px rgb(0 0 0 / 0.4);
+	--shadow-lg: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 24px 64px rgb(0 0 0 / 0.55);
 
 	--font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-	--font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+	--font-display: var(--font-sans);
 	--font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
 	--space: 1rem;
 	--measure: 68ch;
 	--figure: 72rem;
-	--radius-sm: 0.25rem;
-	--radius: 0.25rem;
-	--radius-lg: 0.375rem;
-	--radius-xl: 0.375rem;
+	--radius-sm: 0.625rem;
+	--radius: 0.875rem;
+	--radius-lg: 1.25rem;
+	--radius-xl: 1.75rem;
 	--header-h: 3.25rem;
 
 	/* Type scale: every font-size on the site is one of these. Tracking tightens and leading drops as size grows.
@@ -58,9 +61,9 @@
 	--text-md: 1.0625rem;
 	--text-lg: 1.25rem;
 	--text-xl: clamp(1.25rem, 2.4vw, 1.625rem);
-	--text-2xl: clamp(2rem, 4vw, 2.75rem);
-	--text-3xl: clamp(2.75rem, 6.5vw, 4.5rem);
-	--text-display: clamp(4rem, 15vw, 9.5rem);
+	--text-2xl: clamp(1.75rem, 3.4vw, 2.375rem);
+	--text-3xl: clamp(2.25rem, 5.5vw, 3.5rem);
+	--text-display: clamp(3rem, 10vw, 6.25rem);
 	/* Spacing: a 4px scale (--space-N = N x 4px). --space (16px) is the phone gutter. */
 	--space-1: 0.25rem;
 	--space-2: 0.5rem;
@@ -74,13 +77,6 @@
 	--space-16: 4rem;
 	--space-20: 5rem;
 	--theme-ease: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
-@font-face {
-	font-family: 'Barlow Condensed';
-	font-weight: 800;
-	font-display: swap;
-	src: url('./barlow-condensed-800.woff2') format('woff2');
 }
 
 /* defined edges instead of soft shadows; the header goes solid (see Base.astro) */
@@ -127,14 +123,13 @@ h3 {
 	font-weight: 700;
 	text-wrap: balance;
 }
-/* poster type: condensed ExtraBold capitals for page and section titles */
+/* Apple-style titles: system type, bold, tight tracking */
 h1,
 h2 {
 	font-family: var(--font-display);
-	font-weight: 800;
-	text-transform: uppercase;
-	line-height: 1;
-	letter-spacing: 0.01em;
+	font-weight: 700;
+	line-height: 1.05;
+	letter-spacing: -0.03em;
 }
 h1 {
 	font-size: var(--text-3xl);
@@ -143,8 +138,6 @@ h2 {
 	font-size: var(--text-2xl);
 }
 .prose h2 {
-	font-family: var(--font-sans);
-	text-transform: none;
 	letter-spacing: -0.015em;
 }
 h3 {
@@ -240,7 +233,7 @@ a:hover {
 	min-height: 2.25rem;
 	padding: var(--space-2) var(--space-4);
 	border: 1px solid var(--card-border);
-	border-radius: var(--radius-sm);
+	border-radius: 999px;
 	background: var(--fill);
 	color: var(--accent);
 	font: 600 var(--text-sm)/1.2 var(--font-sans);

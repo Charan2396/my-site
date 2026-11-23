@@ -125,19 +125,21 @@ const hasAvatar = existsSync('public/avatar.jpg');
 <style>
 	.hero {
 		position: relative;
-		max-width: 64rem;
-		margin-bottom: var(--space-16);
-		transform-origin: 0 0;
+		max-width: 56rem;
+		margin: var(--space-8) auto var(--space-16);
+		text-align: center;
+		transform-origin: 50% 0;
 	}
-	/* dot grid behind the hero, fading out to the right and bottom */
+	/* ambient glow behind the hero: two soft blue-cyan lights, static */
 	.hero::before {
 		content: '';
 		position: absolute;
-		inset: calc(var(--space-8) * -1) calc(var(--space) * -1) calc(var(--space-4) * -1) calc(var(--space) * -1);
+		inset: calc(var(--space-16) * -1) calc(var(--space) * -1) calc(var(--space-4) * -1);
 		z-index: -1;
-		background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
-		background-size: 1.25rem 1.25rem;
-		mask-image: radial-gradient(ellipse at 0 0, #000 30%, transparent 75%);
+		background:
+			radial-gradient(34rem 18rem at 28% 30%, var(--glow), transparent 70%),
+			radial-gradient(28rem 16rem at 74% 22%, var(--glow-2), transparent 70%);
+		mask-image: radial-gradient(ellipse 62% 72% at 50% 46%, #000 35%, transparent 100%);
 		pointer-events: none;
 	}
 	/* a data-flow line: five stages, one pulse that travels once per visit, then rests at the sink */
@@ -148,7 +150,7 @@ const hasAvatar = existsSync('public/avatar.jpg');
 		align-items: center;
 		max-width: 28rem;
 		height: 1rem;
-		margin-top: var(--space-8);
+		margin: var(--space-8) auto 0;
 	}
 	.rail {
 		position: absolute;
@@ -181,30 +183,28 @@ const hasAvatar = existsSync('public/avatar.jpg');
 			transform: translateX(calc(-1 * min(28rem, 100vw - 2 * var(--space)) + 1rem));
 		}
 	}
-	/* the one invitation on the home page: a fight-card banner */
+	/* the one invitation on the home page: a glass banner */
 	.lab-teaser {
 		display: grid;
 		gap: var(--space-1);
 		margin-bottom: var(--space-16);
-		padding: var(--space-5) var(--space-6);
+		padding: var(--space-6) var(--space-8);
 		border: 1px solid var(--card-border);
-		border-left: 0.5rem solid var(--heat);
-		border-radius: var(--radius-lg);
-		background: var(--surface);
+		border-radius: var(--radius-xl);
+		background: linear-gradient(135deg, var(--tint), var(--surface) 70%);
+		box-shadow: var(--shadow-md);
 		color: var(--ink);
 		text-decoration: none;
 	}
 	.lab-teaser:hover {
 		border-color: var(--accent);
-		border-left-color: var(--heat);
 		text-decoration: none;
 	}
 	.lab-title {
-		font-family: var(--font-display);
 		font-size: var(--text-2xl);
-		font-weight: 800;
-		line-height: 1;
-		text-transform: uppercase;
+		font-weight: 700;
+		line-height: 1.1;
+		letter-spacing: -0.025em;
 	}
 	.lab-sub {
 		color: var(--muted);
@@ -248,29 +248,39 @@ const hasAvatar = existsSync('public/avatar.jpg');
 	}
 	h1 {
 		margin-block: 0 var(--space-4);
-		padding-left: var(--space-4);
-		border-left: 0.5rem solid var(--accent);
+		padding-bottom: 0.08em;
 		font-size: var(--text-display);
-		line-height: 0.9;
+		line-height: 1.05;
+		letter-spacing: -0.04em;
+	}
+	/* a soft light-to-blue sweep on the name; solid ink where background-clip is missing */
+	@supports (background-clip: text) or (-webkit-background-clip: text) {
+		h1 {
+			background: linear-gradient(180deg, var(--ink) 35%, color-mix(in srgb, var(--ink) 45%, var(--accent)));
+			-webkit-background-clip: text;
+			background-clip: text;
+			-webkit-text-fill-color: transparent;
+		}
 	}
 	.subtitle {
 		margin: 0 0 var(--space-6);
 		color: var(--muted);
 		font-size: var(--text-xl);
-		font-weight: 600;
+		font-weight: 500;
 		line-height: 1.25;
 		letter-spacing: -0.012em;
 	}
 	.contact {
 		display: flex;
 		flex-wrap: wrap;
+		justify-content: center;
 		gap: var(--space-2) var(--space-3);
 		margin: 0 0 var(--space-8);
 		padding: 0;
 		list-style: none;
 	}
 	.lede {
-		margin: 0;
+		margin: 0 auto;
 	}
 	/* a proof chip: small tinted label on each design card */
 	.chip {
