@@ -62,6 +62,12 @@ const hasAvatar = existsSync('public/avatar.jpg');
 		})(document.currentScript.previousElementSibling);
 	</script>
 
+	<a class="lab-teaser press" href={url('lab/')}>
+		<span class="eyebrow">Play it</span>
+		<span class="lab-title">Break my pipeline</span>
+		<span class="lab-sub">Throw five failures at a CDC pipeline. Switch the defense off and watch it land.</span>
+	</a>
+
 	<ImpactStrip />
 	<CareerStrip />
 
@@ -174,6 +180,35 @@ const hasAvatar = existsSync('public/avatar.jpg');
 		from {
 			transform: translateX(calc(-1 * min(28rem, 100vw - 2 * var(--space)) + 1rem));
 		}
+	}
+	/* the one invitation on the home page: a fight-card banner */
+	.lab-teaser {
+		display: grid;
+		gap: var(--space-1);
+		margin-bottom: var(--space-16);
+		padding: var(--space-5) var(--space-6);
+		border: 1px solid var(--card-border);
+		border-left: 0.5rem solid var(--heat);
+		border-radius: var(--radius-lg);
+		background: var(--surface);
+		color: var(--ink);
+		text-decoration: none;
+	}
+	.lab-teaser:hover {
+		border-color: var(--accent);
+		border-left-color: var(--heat);
+		text-decoration: none;
+	}
+	.lab-title {
+		font-family: var(--font-display);
+		font-size: var(--text-2xl);
+		font-weight: 800;
+		line-height: 1;
+		text-transform: uppercase;
+	}
+	.lab-sub {
+		color: var(--muted);
+		font-size: var(--text-sm);
 	}
 	.about {
 		display: flex;

@@ -29,7 +29,7 @@ await p.goto(base);
 const header = await p.$$eval('nav[aria-label="Main"] a', (as) => as.map((a) => a.textContent.trim()));
 const footer = await p.$$eval('footer a', (as) => as.map((a) => a.textContent.trim()));
 ok(header.join('|') === 'Designs|Working with me|Projects|Resume', `header nav: ${header}`);
-ok(footer.join('|') === 'Email|LinkedIn|GitHub|Decisions|Build log', `footer links: ${footer}`);
+ok(footer.join('|') === 'Email|LinkedIn|GitHub|Lab|Decisions|Build log', `footer links: ${footer}`);
 await p.goto(base + 'build-log/');
 const dates = await p.$$eval('.log time', (ts) => ts.map((t) => t.getAttribute('datetime')));
 const ids = await p.$$eval('.log h2', (hs) => hs.map((h) => h.id));

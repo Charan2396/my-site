@@ -1,0 +1,70 @@
+---
+import Base from '../layouts/Base.astro';
+import Lab from '../components/Lab.astro';
+import { rounds } from '../lib/lab';
+import { url } from '../lib/url';
+---
+
+<Base
+	title="Break my pipeline"
+	description="A playable simulation: throw five failures at a change-data-capture pipeline, switch their defenses off, and watch them land."
+>
+	<h1>Break my pipeline</h1>
+	<p class="lede">
+		Pick a failure and throw it at the five stages. Then switch its defense off and watch it land. It is a simulation on invented
+		sample data: five failures a replication pipeline has to survive, each tied to the design or story it comes from.
+	</p>
+
+	<Lab />
+
+	<section class="say" aria-labelledby="say-heading">
+		<h2 id="say-heading">What I would say about each round</h2>
+		<ol>
+			{
+				rounds.map((r) => (
+					<li>
+						<h3>
+							{r.n}. {r.failure}
+						</h3>
+						<p>{r.talk}</p>
+						<p class="caption">
+							From <a href={url(r.href)}>{r.source}</a>
+						</p>
+					</li>
+				))
+			}
+		</ol>
+	</section>
+</Base>
+
+<style>
+	.lede {
+		margin: var(--space-3) 0 var(--space-8);
+	}
+	.say {
+		margin-top: var(--space-20);
+	}
+	.say h2 {
+		margin: 0 0 var(--space-5);
+	}
+	.say ol {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+		gap: var(--space-4);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.say li {
+		padding: var(--space-5) var(--space-6);
+		border: 1px solid var(--card-border);
+		border-radius: var(--radius-lg);
+		background: var(--surface);
+	}
+	.say h3 {
+		margin: 0 0 var(--space-2);
+	}
+	.say p {
+		margin: 0 0 var(--space-2);
+	}
+</style>
